@@ -89,7 +89,7 @@ namespace Rank_Order_Filters
         {
             if (string.IsNullOrEmpty(textBox1.Text))
             {
-                MessageBoxResult result = MessageBox.Show("Please input the color image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -196,7 +196,7 @@ namespace Rank_Order_Filters
         {
             if (string.IsNullOrEmpty(textBox1.Text))
             {
-                MessageBoxResult result = MessageBox.Show("Please input the color image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -380,6 +380,12 @@ namespace Rank_Order_Filters
                 }
             }
             #endregion
+        }
+
+        // Closes all preview windows when main window is closed
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.Current.Shutdown();
         }
     }
 }
