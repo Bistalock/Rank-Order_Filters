@@ -17,7 +17,7 @@ using BitMiracle.LibTiff.Classic; // Use Tiff images
 using System.Collections.Specialized; // String Collection
 using System.IO; // Memory Stream
 
-namespace Rank_Order_Filters
+namespace Filter_GUI
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

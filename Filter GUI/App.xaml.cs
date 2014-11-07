@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace Rank_Order_Filters
+namespace Filter_GUI
 {
     /// <summary>
     /// Interaction logic for App.xaml

@@ -1,4 +1,4 @@
-﻿<Window x:Class="Rank_Order_Filters.Preview"
+﻿<Window x:Class="Filter_GUI.Preview"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Preview" Height="300" Width="300" ResizeMode="NoResize" WindowStyle="ToolWindow">

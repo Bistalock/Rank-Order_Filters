@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Rank_Order_Filters.Properties
+namespace Filter_GUI.Properties
 {
 
 
