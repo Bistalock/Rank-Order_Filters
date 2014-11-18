@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using BitMiracle.LibTiff.Classic; // Use Tiff images
 using System.Collections.Specialized; // String Collection
 using System.IO; // Memory Stream
+using System.Runtime.InteropServices; // DLL support
 
 namespace Filter_GUI
 {
@@ -24,6 +25,15 @@ namespace Filter_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        [DllImport(@"EV Filter.dll", CallingConvention=CallingConvention.Cdecl)]
+        public static extern Byte[,,] getImage(
+            Byte[,,] inputImage,
+            int height,
+            int width,
+            int samples,
+            int kernel,
+            int EV);
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -67,6 +77,14 @@ namespace Filter_GUI
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            //int A = FilterTest();
+            //string B = Convert.ToString(A);
+            //MessageBoxResult test = MessageBox.Show(B, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            //if (test == MessageBoxResult.OK)
+            //{
+            //    return;
+            //}
+
             // Create OpenFileDialog 
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
 
@@ -99,101 +117,38 @@ namespace Filter_GUI
             Tiff image = Tiff.Open(textBox1.Text, "r");
 
             // Obtain basic tag information of the image
-            #region GetTagInfo
             int width = image.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
             int height = image.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
             byte bits = image.GetField(TiffTag.BITSPERSAMPLE)[0].ToByte();
             byte pixel = image.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToByte();
-            #endregion
 
-            #region Grayscale Image
-            if (pixel == 1)
-            {
-                // read bytes of an image
-                byte[] buffer = File.ReadAllBytes(textBox1.Text);
+            // read bytes of an image
+            byte[] buffer = File.ReadAllBytes(textBox1.Text);
 
-                MemoryStream memoryStream = new MemoryStream(buffer);
+            MemoryStream memoryStream = new MemoryStream(buffer);
 
-                var imageSource = new BitmapImage();
-                imageSource.BeginInit();
-                imageSource.StreamSource = memoryStream;
-                imageSource.EndInit();
+            var imageSource = new BitmapImage();
+            imageSource.BeginInit();
+            imageSource.StreamSource = memoryStream;
+            imageSource.EndInit();
 
-                var Preview = new Preview(imageSource);
-                Preview.Show();
+            var Preview = new Preview(imageSource);
+            Preview.Show();
 
-            }
-            #endregion
-
-            #region Color Image
-            if (pixel == 3)
-            {
-                //int imageSize = height * width * 3;
-                //int[] raster = new int[imageSize];
-
-                //byte[] scanline = new byte[image.ScanlineSize()];
-
-                //// Initiallization of RGB values
-                //int[,] red = new int[height, width];
-                //int[,] green = new int[height, width];
-                //int[,] blue = new int[height, width];
-
-                //for (int i = 0; height > i; i++)
-                //{
-                //    image.ReadScanline(scanline, i); // EVIL BUG HERE
-                //    for (int j = 0; j < width; j++)
-                //    {
-                //        red[i, j] = scanline[3 * j]; // PSNR: INFINITY, Channel is correct
-                //        green[i, j] = scanline[3 * j + 1]; // PSNR: INFINITY, Channel is correct
-                //        blue[i, j] = scanline[3 * j + 2]; // PSNR: INFINITY, Channel is correct
-                //    }
-                //}
-
-                //byte[,] RGB = new byte[height, image.ScanlineSize()];
-
-                //#region Merge RGB
-                //for (int i = 0; i < height; i++)
-                //{
-                //    for (int j = 0; j < width; j++)
-                //    {
-                //        RGB[i, 3 * j] = Convert.ToByte(red[i, j]);
-                //    }
-                //}
-
-                //for (int i = 0; i < height; i++)
-                //{
-                //    for (int j = 0; j < width; j++)
-                //    {
-                //        RGB[i, 3 * j + 1] = Convert.ToByte(green[i, j]);
-                //    }
-                //}
-                //for (int i = 0; i < height; i++)
-                //{
-                //    for (int j = 0; j < width; j++)
-                //    {
-                //        RGB[i, 3 * j + 2] = Convert.ToByte(blue[i, j]);
-                //    }
-                //}
-                //#endregion
-
-                // read bytes of an image
-                byte[] buffer = File.ReadAllBytes(textBox1.Text);
-
-                MemoryStream memoryStream = new MemoryStream(buffer);
-
-                var imageSource = new BitmapImage();
-                imageSource.BeginInit();
-                imageSource.StreamSource = memoryStream;
-                imageSource.EndInit();
-
-                var Preview = new Preview(imageSource);
-                Preview.Show();
-            }
-            #endregion
         }
+
+        //public unsafe IntPtr test(byte[,,] processedImage)
+        //{
+        //    fixed (byte* p = processedImage)
+        //    {
+        //        IntPtr test2 = (IntPtr)p;
+        //        return test2;
+        //    }
+        //}
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
+            #region load image
             if (string.IsNullOrEmpty(textBox1.Text))
             {
                 MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -206,178 +161,118 @@ namespace Filter_GUI
             Tiff image = Tiff.Open(textBox1.Text, "r");
 
             // Obtain basic tag information of the image
-            #region GetTagInfo
             int width = image.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
             int height = image.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
             byte bits = image.GetField(TiffTag.BITSPERSAMPLE)[0].ToByte();
-            byte pixel = image.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToByte();
-            #endregion
+            byte samples = image.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToByte();
 
-            #region Grayscale Image
-            if (pixel == 1)
+
+            // store the image information in 2d byte array
+            // reserve memory for storing the size of 1 line
+            byte[] scanline = new byte[image.ScanlineSize()];
+            // reserve memory for the size of image
+
+            Byte[, ,] inputImage = new Byte[samples, height, width];
+            for (int k = 0; k < samples; k++)
             {
-                // store the image information in 2d byte array
-                // reserve memory for storing the size of 1 line
-                byte[] scanline = new byte[image.ScanlineSize()];
-                // reserve memory for the size of image
-                byte[,] gray = new byte[height, width];
                 for (int i = 0; i < height; i++)
                 {
                     image.ReadScanline(scanline, i);
+                    for (int j = 0; j < width; j++)
                     {
-                        for (int j = 0; j < width; j++)
-                            gray[i, j] = scanline[j];
-                    }
-                } // end grabbing intensity values   
-
-                // Create OpenFileDialog 
-                Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-
-                // Set filter for file extension and default file extension 
-                dlg.DefaultExt = ".tif";
-                dlg.Filter = "TIFF Image (*.tif;*.tiff)|*.tif;.tiff|All files (*.*)|*.*";
-                dlg.FileName = System.IO.Path.GetFileNameWithoutExtension(textBox1.Text) + "_Filtered" + ".tif";
-                // Assigns the results value when Dialog is opened
-                var dlgresult = dlg.ShowDialog();
-
-                // Checks if value is true
-                if (dlgresult == true)
-                {
-                    using (Tiff output = Tiff.Open(dlg.FileName, "w"))
-                    {
-                        output.SetField(TiffTag.IMAGEWIDTH, width);
-                        output.SetField(TiffTag.IMAGELENGTH, height);
-                        output.SetField(TiffTag.SAMPLESPERPIXEL, 1);
-                        output.SetField(TiffTag.BITSPERSAMPLE, 8);
-                        output.SetField(TiffTag.ORIENTATION, BitMiracle.LibTiff.Classic.Orientation.TOPLEFT);
-                        output.SetField(TiffTag.ROWSPERSTRIP, height);
-                        output.SetField(TiffTag.XRESOLUTION, 88.0);
-                        output.SetField(TiffTag.YRESOLUTION, 88.0);
-                        output.SetField(TiffTag.RESOLUTIONUNIT, ResUnit.INCH);
-                        output.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-                        output.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
-                        output.SetField(TiffTag.COMPRESSION, Compression.NONE);
-                        output.SetField(TiffTag.FILLORDER, FillOrder.MSB2LSB);
-
-
-                        byte[] im = new byte[width * sizeof(byte /*can be changed depending on the format of the image*/)];
-
-                        for (int i = 0; i < height; ++i)
-                        {
-                            for (int j = 0; j < width; ++j)
-                            {
-                                im[j] = Convert.ToByte(gray[i, j]);
-                            }
-                            output.WriteScanline(im, i);
-                        }
-                        output.WriteDirectory();
-                        output.Dispose();
+                        inputImage[k, i, j] = scanline[3 * j + k];
                     }
                 }
-            }
+            } // end grabbing intensity values
             #endregion
 
-            #region Color Image
-            if (pixel == 3)
+            int kernel = 3;
+            int EV = 35;
+
+            Byte[, ,] processedImage = new Byte[samples, width, height];
+
+            //IntPtr buffer = test(processedImage);
+                
+                
+            processedImage = getImage(inputImage, height, width, samples, kernel, EV);
+
+            byte[] test2 = new byte[samples * width *height];
+                
+            //Marshal.Copy(pointerarray, test2, 0, samples*width*height);
+
+            for (int k = 0; k < samples; k++)
             {
-                int imageSize = height * width * 3;
-                int[] raster = new int[imageSize];
-
-                byte[] scanline = new byte[image.ScanlineSize()];
-
-                // Initiallization of RGB values
-                int[,] red = new int[height, width];
-                int[,] green = new int[height, width];
-                int[,] blue = new int[height, width];
-
-                for (int i = 0; height > i; i++)
-                {
-                    image.ReadScanline(scanline, i); // Potential fix needed here
-                    for (int j = 0; j < width; j++)
-                    {
-                        red[i, j] = scanline[3 * j]; // PSNR: INFINITY, Channel is correct
-                        green[i, j] = scanline[3 * j + 1]; // PSNR: INFINITY, Channel is correct
-                        blue[i, j] = scanline[3 * j + 2]; // PSNR: INFINITY, Channel is correct
-                    }
-                }
-
-                // new array holding color values
-                byte[,] RGB = new byte[height, image.ScanlineSize()];
-
-                #region Merge RGB
-                // loop obtaining the red color values
                 for (int i = 0; i < height; i++)
                 {
                     for (int j = 0; j < width; j++)
                     {
-                        RGB[i, 3 * j] = Convert.ToByte(red[i, j]);
+                        processedImage[k, i, j] = test2[(3 * j) * i + k];
                     }
                 }
-                // loop containing green color values
-                for (int i = 0; i < height; i++)
+            } // end grabbing intensity values
+
+            #region Save image
+            string fileName = "processed.tif";
+
+            // Create OpenFileDialog 
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+
+            // Set filter for file extension and default file extension 
+            dlg.DefaultExt = ".tif";
+            dlg.Filter = "TIFF Image (*.tif;*.tiff)|*.tif;.tiff|All files (*.*)|*.*";
+            dlg.FileName = fileName;
+            // Assigns the results value when Dialog is opened
+            var dlgresult = dlg.ShowDialog();
+
+            // Checks if value is true
+            if (dlgresult == true)
+            {
+                // Recreation of the image from 3d byte array image
+                using (Tiff output = Tiff.Open(dlg.FileName, "w"))
                 {
-                    for (int j = 0; j < width; j++)
+                    #region SetTagInfo
+                    // set tag information
+                    output.SetField(TiffTag.IMAGEWIDTH, width);
+                    output.SetField(TiffTag.IMAGELENGTH, height);
+                    output.SetField(TiffTag.BITSPERSAMPLE, bits);
+                    output.SetField(TiffTag.SAMPLESPERPIXEL, samples);
+                    output.SetField(TiffTag.ORIENTATION, BitMiracle.LibTiff.Classic.Orientation.TOPLEFT);
+                    output.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
+                    output.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                    output.SetField(TiffTag.ROWSPERSTRIP, height);
+                    output.SetField(TiffTag.XRESOLUTION, 96); //dpiX);
+                    output.SetField(TiffTag.YRESOLUTION, 96); //dpiY);
+                    output.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
+                    output.SetField(TiffTag.RESOLUTIONUNIT, ResUnit.CENTIMETER);
+                    output.SetField(TiffTag.COMPRESSION, Compression.NONE);
+                    output.SetField(TiffTag.FILLORDER, FillOrder.MSB2LSB);
+                    #endregion
+
+                    // reserve buffer
+                    byte[] wtf = new byte[width * samples];
+                    // obtain each line of the final byte arrays and write them to a file
+
+                    // loop is [height,width,samples] because of how Tiff scanlines work
+                    for (int i = 0; i < height; i++)
                     {
-                        RGB[i, 3 * j + 1] = Convert.ToByte(green[i, j]);
-                    }
-                }
-                // loop containing blue color values
-                for (int i = 0; i < height; i++)
-                {
-                    for (int j = 0; j < width; j++)
-                    {
-                        RGB[i, 3 * j + 2] = Convert.ToByte(blue[i, j]);
-                    }
-                }
-                #endregion
-
-                // Create OpenFileDialog 
-                Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-
-                // Set filter for file extension and default file extension 
-                dlg.DefaultExt = ".tif";
-                dlg.Filter = "TIFF Image (*.tif;*.tiff)|*.tif;.tiff|All files (*.*)|*.*";
-                dlg.FileName = System.IO.Path.GetFileNameWithoutExtension(textBox1.Text) + "_Filtered" + ".tif";
-                // Assigns the results value when Dialog is opened
-                var dlgresult = dlg.ShowDialog();
-
-                // Checks if value is true
-                if (dlgresult == true)
-                {
-                    using (Tiff output = Tiff.Open(dlg.FileName, "w"))
-                    {
-
-                        // Write the tiff tags to the file
-                        output.SetField(TiffTag.IMAGEWIDTH, width);
-                        output.SetField(TiffTag.IMAGELENGTH, height);
-                        output.SetField(TiffTag.SAMPLESPERPIXEL, 3);
-                        output.SetField(TiffTag.BITSPERSAMPLE, 8);
-                        output.SetField(TiffTag.ORIENTATION, BitMiracle.LibTiff.Classic.Orientation.TOPLEFT);
-                        output.SetField(TiffTag.ROWSPERSTRIP, height);
-                        output.SetField(TiffTag.XRESOLUTION, 88.0);
-                        output.SetField(TiffTag.YRESOLUTION, 88.0);
-                        output.SetField(TiffTag.RESOLUTIONUNIT, ResUnit.INCH);
-                        output.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-                        output.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
-                        output.SetField(TiffTag.COMPRESSION, Compression.NONE);
-                        output.SetField(TiffTag.FILLORDER, FillOrder.MSB2LSB);
-
-
-                        byte[] im = new byte[image.ScanlineSize() * sizeof(byte /*can be changed depending on the format of the image*/)];
-
-                        for (int i = 0; i < height; i++)
+                        for (int j = 0; j < width; j++)
                         {
-
-                            for (int j = 0; j < image.ScanlineSize(); j++)
+                            for (int k = 0; k < samples; k++)
                             {
-                                im[j] = RGB[i, j];
+                                wtf[3 * j + k] = Convert.ToByte(processedImage[k, i, j]); // saving the resulting image to file
                             }
-                            output.WriteEncodedStrip(i, im, image.ScanlineSize());
+
                         }
-                        output.WriteDirectory();
-                        output.Dispose();
+                        // write
+                        //output.WriteScanline(buffer, i);
+                        output.WriteEncodedStrip(i, wtf, image.ScanlineSize());
                     }
-                }
+                    // write to file
+                    output.WriteDirectory();
+                    output.Dispose();
+
+                    System.Diagnostics.Process.Start(dlg.FileName); // displays the result
+                }// end inner using
             }
             #endregion
         }
