@@ -25,14 +25,14 @@ namespace Filter_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        [DllImport(@"EV Filter.dll", CallingConvention=CallingConvention.Cdecl)]
-        public static extern Byte[,,] getImage(
-            Byte[,,] inputImage,
-            int height,
-            int width,
-            int samples,
-            int kernel,
-            int EV);
+        [DllImport("EV_Filter.dll", CallingConvention= CallingConvention.Cdecl)]
+        public static extern int getImage(int height, int width, int samples, int kernel, int EV);
+
+        [DllImport("EV_Filter.dll")]
+        public static extern int EV_Filter();
+
+        [DllImport("EV_Filter.dll")]
+        public static extern int EV_Filter2();
         
         public MainWindow()
         {
@@ -172,7 +172,7 @@ namespace Filter_GUI
             byte[] scanline = new byte[image.ScanlineSize()];
             // reserve memory for the size of image
 
-            Byte[, ,] inputImage = new Byte[samples, height, width];
+            byte[, ,] inputImage = new byte[samples, height, width];
             for (int k = 0; k < samples; k++)
             {
                 for (int i = 0; i < height; i++)
@@ -192,13 +192,28 @@ namespace Filter_GUI
             Byte[, ,] processedImage = new Byte[samples, width, height];
 
             //IntPtr buffer = test(processedImage);
-                
-                
-            processedImage = getImage(inputImage, height, width, samples, kernel, EV);
 
-            byte[] test2 = new byte[samples * width *height];
-                
-            //Marshal.Copy(pointerarray, test2, 0, samples*width*height);
+            //int wtf = 4;
+
+            //int omg = EV_Filter2();
+            int omg = getImage(height, width, samples, kernel, EV);
+            string lol = Convert.ToString(omg);
+
+            MessageBoxResult test = MessageBox.Show("Value succesfully returned from C++!\nThe value returned is: " + lol, "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (test == MessageBoxResult.OK)
+            {
+                return;
+            }
+
+            
+
+            byte[] test2 = new byte[samples * width * height];
+
+            //Marshal.Copy(pointerarray, test2, 0, samples * width * height);
+
+
+
+
 
             for (int k = 0; k < samples; k++)
             {
@@ -249,7 +264,7 @@ namespace Filter_GUI
                     #endregion
 
                     // reserve buffer
-                    byte[] wtf = new byte[width * samples];
+                    byte[] buffer = new byte[width * samples];
                     // obtain each line of the final byte arrays and write them to a file
 
                     // loop is [height,width,samples] because of how Tiff scanlines work
@@ -259,13 +274,13 @@ namespace Filter_GUI
                         {
                             for (int k = 0; k < samples; k++)
                             {
-                                wtf[3 * j + k] = Convert.ToByte(processedImage[k, i, j]); // saving the resulting image to file
+                                buffer[3 * j + k] = Convert.ToByte(processedImage[k, i, j]); // saving the resulting image to file
                             }
 
                         }
                         // write
                         //output.WriteScanline(buffer, i);
-                        output.WriteEncodedStrip(i, wtf, image.ScanlineSize());
+                        output.WriteEncodedStrip(i, buffer, image.ScanlineSize());
                     }
                     // write to file
                     output.WriteDirectory();

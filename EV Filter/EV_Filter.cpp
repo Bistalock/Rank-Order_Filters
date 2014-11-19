@@ -7,19 +7,23 @@
 #include "EV_Filter.h"
 #include <cmath>
 
+#using <mscorlib.dll>
+
+using namespace System;
+
 // Definition of EV Filter constructor
-EV_Filter::EV_Filter(): EV(35), kernel(3)
-{
-	//array<Byte,3>^ inputImage = gcnew array<Byte,3>(samples, height, width);
-}
+//EV_Filter::EV_Filter(void)/*: EV(35), kernel(3)*/
+//{
+//	/*array<Byte,3>^ inputImage = gcnew array<Byte,3>(samples, height, width);*/
+//}
+//
+//// Definition of EV Filter destructor
+//EV_Filter::~EV_Filter(void)
+//{
+//	//delete[] inputImage;
+//}
 
-// Definition of EV Filter destructor
-EV_Filter::~EV_Filter(void)
-{
-	//delete[] inputImage;
-}
-
-array<Byte,3>^ EV_Filter::getImage(array<Byte,3>^ inputImage, int height, int width, int samples, int kernel, int EV)//wchar_t *phrase)
+__declspec(dllexport) int getImage(int height, int width, int samples, int kernel, int EV)//wchar_t *phrase)
 {
 	int offset = (kernel - 3) / 2 + 1; // calculation of the center 
     //inputImage = new int[];
@@ -29,6 +33,7 @@ array<Byte,3>^ EV_Filter::getImage(array<Byte,3>^ inputImage, int height, int wi
     int MirroredHeight = height + (offset * 2);
     int MirroredWidth = width + (offset * 2);
 
+	array<Byte,3>^ inputImage = gcnew array<Byte,3>(samples, MirroredHeight, MirroredWidth);
 	array<Byte,3>^ mirrorImage = gcnew array<Byte,3>(samples, MirroredHeight, MirroredWidth);
 
     // copying the original image to the larger mirrored image
@@ -143,7 +148,8 @@ array<Byte,3>^ EV_Filter::getImage(array<Byte,3>^ inputImage, int height, int wi
     } // end of EV filtering   
     #pragma endregion
 
-	return processedImage;
+	//return processedImage;
+	return 0;
 }
 
 //int FilterTest()

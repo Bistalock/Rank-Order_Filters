@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EV_Filter", "EV_Filter\EV_Filter.vcxproj", "{718D1D8A-E094-4B44-B558-C71965E39061}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{718D1D8A-E094-4B44-B558-C71965E39061}.Debug|Win32.ActiveCfg = Debug|Win32
+		{718D1D8A-E094-4B44-B558-C71965E39061}.Debug|Win32.Build.0 = Debug|Win32
+		{718D1D8A-E094-4B44-B558-C71965E39061}.Release|Win32.ActiveCfg = Release|Win32
+		{718D1D8A-E094-4B44-B558-C71965E39061}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
