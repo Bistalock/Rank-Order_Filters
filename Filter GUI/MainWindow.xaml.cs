@@ -25,14 +25,12 @@ namespace Filter_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        [DllImport("EV_Filter.dll", CallingConvention= CallingConvention.Cdecl)]
-        public static extern int getImage(int height, int width, int samples, int kernel, int EV);
+        //[DllImport("EV_Filter.dll", CallingConvention = CallingConvention.Cdecl, CharSet=CharSet.Auto)]
+        //public static extern int[,,] getImage([MarshalAs(UnmanagedType.LPArray)]int[, ,] inputImage, int height, int width, int samples, int kernel, int EV);
 
-        [DllImport("EV_Filter.dll")]
-        public static extern int EV_Filter();
-
-        [DllImport("EV_Filter.dll")]
-        public static extern int EV_Filter2();
+        // Importing the C++ EV Filter dynamic link library with a P/Invoke call
+        [DllImport("EV_Filter.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)]
+        public static extern IntPtr getImage([In, Out] int[] inputImage, int height, int width, int samples, int kernel, int EV);
         
         public MainWindow()
         {
@@ -77,14 +75,6 @@ namespace Filter_GUI
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            //int A = FilterTest();
-            //string B = Convert.ToString(A);
-            //MessageBoxResult test = MessageBox.Show(B, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //if (test == MessageBoxResult.OK)
-            //{
-            //    return;
-            //}
-
             // Create OpenFileDialog 
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
 
@@ -120,31 +110,59 @@ namespace Filter_GUI
             int width = image.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
             int height = image.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
             byte bits = image.GetField(TiffTag.BITSPERSAMPLE)[0].ToByte();
-            byte pixel = image.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToByte();
+            byte samples = image.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToByte();
+
+            // store the image information in 2d byte array
+            // reserve memory for storing the size of 1 line
+            byte[] scanline = new byte[image.ScanlineSize()];
+            // reserve memory for the size of image
+
+            // creating the 1 dimentional buffer containing information for ALL 3 DIMENTIONS
+            int[] inputImageBuffer = new int[samples * height * width];
+
+            byte[] test = new byte[samples * height * width];
+
+            // loop gathering the values from a single scanline at a time
+            for (int i = 0; i < height; i++)
+            {
+                image.ReadScanline(scanline, i); // read the scanline for each column
+                for (int j = 0; j < samples * width; j++)
+                {
+                    // writing the entire image as a 1 dimentional integer buffer.
+                    inputImageBuffer[image.ScanlineSize() * i + j] = scanline[j];
+                    test[image.ScanlineSize() * i + j] = Convert.ToByte(inputImageBuffer[image.ScanlineSize() * i + j]);
+                }
+            } // end grabbing intensity values
 
             // read bytes of an image
-            byte[] buffer = File.ReadAllBytes(textBox1.Text);
+            // byte[] ByteImageBuffer = File.ReadAllBytes(textBox1.Text);
 
-            MemoryStream memoryStream = new MemoryStream(buffer);
+            #region Initialization and processing
+            // the kernel window to be used
+            int kernel = 3;
+
+            // the paremeter to be used for the filter
+            int Filter_Parameter = 35;
+
+            // initiallizing the 1 dimentional resulting image
+            int[] processedImageBuffer = new int[samples * width * height];
+
+            // Calling the native C++ function via a P/Invoke in C#
+            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernel, Filter_Parameter);
+
+            // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
+            Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
+            #endregion
 
             var imageSource = new BitmapImage();
             imageSource.BeginInit();
-            imageSource.StreamSource = memoryStream;
+            imageSource.StreamSource = new MemoryStream(test);
             imageSource.EndInit();
 
             var Preview = new Preview(imageSource);
             Preview.Show();
 
         }
-
-        //public unsafe IntPtr test(byte[,,] processedImage)
-        //{
-        //    fixed (byte* p = processedImage)
-        //    {
-        //        IntPtr test2 = (IntPtr)p;
-        //        return test2;
-        //    }
-        //}
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
@@ -172,59 +190,53 @@ namespace Filter_GUI
             byte[] scanline = new byte[image.ScanlineSize()];
             // reserve memory for the size of image
 
-            byte[, ,] inputImage = new byte[samples, height, width];
-            for (int k = 0; k < samples; k++)
+            // creating the 1 dimentional buffer containing information for ALL 3 DIMENTIONS
+            int[] inputImageBuffer = new int[samples * height * width];
+
+            // loop gathering the values from a single scanline at a time
+            for (int i = 0; i < height; i++)
             {
-                for (int i = 0; i < height; i++)
+                image.ReadScanline(scanline, i); // read the scanline for each column
+                for (int j = 0; j < samples * width; j++)
                 {
-                    image.ReadScanline(scanline, i);
-                    for (int j = 0; j < width; j++)
-                    {
-                        inputImage[k, i, j] = scanline[3 * j + k];
-                    }
+                    // writing the entire image as a 1 dimentional integer buffer.
+                    inputImageBuffer[image.ScanlineSize() * i + j] = Convert.ToInt32(scanline[j]);
                 }
             } // end grabbing intensity values
+
+            /* --- Old implementation. writes the scanlines into a 3 dimentional array. ---
+             *
+             *   int[, ,] inputImage = new int[samples, height, width];
+             *
+             *   for (int k = 0; k < samples; k++)
+             *   {
+             *       for (int i = 0; i < height; i++)
+             *       {
+             *           for (int j = 0; j < width; j++)
+             *           {
+             *               inputImage[k, i, j] = inputImageBuffer[(image.ScanlineSize() * i) + (3 * j) + k];
+             *           }
+             *       }
+             *   } // end grabbing intensity values
+             */
             #endregion
 
+            #region Initialization and processing
+            // the kernel window to be used
             int kernel = 3;
-            int EV = 35;
 
-            Byte[, ,] processedImage = new Byte[samples, width, height];
+            // the paremeter to be used for the filter
+            int Filter_Parameter = 35;
 
-            //IntPtr buffer = test(processedImage);
+            // initiallizing the 1 dimentional resulting image
+            int[] processedImageBuffer = new int[samples * width * height];
 
-            //int wtf = 4;
+            // Calling the native C++ function via a P/Invoke in C#
+            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernel, Filter_Parameter);
 
-            //int omg = EV_Filter2();
-            int omg = getImage(height, width, samples, kernel, EV);
-            string lol = Convert.ToString(omg);
-
-            MessageBoxResult test = MessageBox.Show("Value succesfully returned from C++!\nThe value returned is: " + lol, "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
-            if (test == MessageBoxResult.OK)
-            {
-                return;
-            }
-
-            
-
-            byte[] test2 = new byte[samples * width * height];
-
-            //Marshal.Copy(pointerarray, test2, 0, samples * width * height);
-
-
-
-
-
-            for (int k = 0; k < samples; k++)
-            {
-                for (int i = 0; i < height; i++)
-                {
-                    for (int j = 0; j < width; j++)
-                    {
-                        processedImage[k, i, j] = test2[(3 * j) * i + k];
-                    }
-                }
-            } // end grabbing intensity values
+            // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
+            Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
+            #endregion
 
             #region Save image
             string fileName = "processed.tif";
@@ -232,7 +244,8 @@ namespace Filter_GUI
             // Create OpenFileDialog 
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
 
-            // Set filter for file extension and default file extension 
+            // Set the dialog box variables
+            dlg.InitialDirectory = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, @"Resources");
             dlg.DefaultExt = ".tif";
             dlg.Filter = "TIFF Image (*.tif;*.tiff)|*.tif;.tiff|All files (*.*)|*.*";
             dlg.FileName = fileName;
@@ -257,10 +270,11 @@ namespace Filter_GUI
                     output.SetField(TiffTag.ROWSPERSTRIP, height);
                     output.SetField(TiffTag.XRESOLUTION, 96); //dpiX);
                     output.SetField(TiffTag.YRESOLUTION, 96); //dpiY);
-                    output.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
-                    output.SetField(TiffTag.RESOLUTIONUNIT, ResUnit.CENTIMETER);
+                    output.SetField(TiffTag.RESOLUTIONUNIT, ResUnit.INCH);
                     output.SetField(TiffTag.COMPRESSION, Compression.NONE);
                     output.SetField(TiffTag.FILLORDER, FillOrder.MSB2LSB);
+                    if (samples == 1) output.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
+                    else if (samples == 3) output.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
                     #endregion
 
                     // reserve buffer
@@ -274,13 +288,13 @@ namespace Filter_GUI
                         {
                             for (int k = 0; k < samples; k++)
                             {
-                                buffer[3 * j + k] = Convert.ToByte(processedImage[k, i, j]); // saving the resulting image to file
+                                buffer[samples * j + k] = Convert.ToByte(processedImageBuffer[(image.ScanlineSize() * i) + (samples * j) + k]); // saving the resulting image to file
                             }
 
                         }
                         // write
-                        //output.WriteScanline(buffer, i);
-                        output.WriteEncodedStrip(i, buffer, image.ScanlineSize());
+                        if (samples == 1) output.WriteScanline(buffer, i);
+                        else if (samples == 3) output.WriteEncodedStrip(i, buffer, image.ScanlineSize());
                     }
                     // write to file
                     output.WriteDirectory();

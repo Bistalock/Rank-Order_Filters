@@ -1,39 +1,57 @@
 /*
+ *		Project Name: Rank-Order EV filter
  *      Date Written: October 17, 2014
- *      Code Written by: Mr. Gabriel Del Pino. Portions inspired by Hiroyuki Plumlee.
+ *      Created by: Gabriel Del Pino. Portions inspired by Hiroyuki Plumlee.
  */  
 
 #include "stdafx.h"
 #include <cmath>
 
-
 extern "C"
 {
-	__declspec(dllexport) int EV_Filter()
-	{
-		int test = 0;
-		return test;
-	}
-
-	__declspec(dllexport) int EV_Filter2()
-	{
-		int test = 99;
-		return test;
-	}
-
-
-	__declspec(dllexport) int getImage(int height, int width, int samples, int kernel, int EV)//wchar_t *phrase)
+	// Function requires a 1 dimentional buffer of an image, along as various parameters
+	// The image array buffer is later converted to a 3 dimentional dynamic array in the format of inputImage[Samples][Height][Width]
+	__declspec(dllexport) int* getImage(int* inputImageBuffer, int height, int width, int samples, int kernel, int EV)
 	{
 		int offset = (kernel - 3) / 2 + 1; // calculation of the center 
-           
-
+        
+		// ***TODO: mirrorImage to be place as separate function in the future
 		#pragma region Mirroring the image
 		// Mirrorimage before the creation of the kernel
 		int MirroredHeight = height + (offset * 2);
 		int MirroredWidth = width + (offset * 2);
-		unsigned char* inputImage = new unsigned char[samples, MirroredHeight, MirroredWidth]();
 
-		unsigned char* mirrorImage = new unsigned char[samples, MirroredHeight, MirroredWidth]();
+		int*** inputImage = new int**[samples];
+
+		// Converting the 1 dimentional array to a 3 dimentional array for C++
+		for (int k = 0; k < samples; k++)
+		{
+			inputImage[k] = new int*[height];
+			for (int i = 0; i < height; i++)
+			{
+				inputImage[k][i] = new int[width];
+				for (int j = 0; j < width; j++)
+				{            
+					inputImage[k][i][j] = inputImageBuffer[((width * samples) * i) + (samples * j) + k];
+				}
+			}
+		}
+
+		int*** mirrorImage = new int**[samples];
+
+		// initiallizing the array values to zero
+		for (int k = 0; k < samples; k++)
+		{
+			mirrorImage[k] = new int*[MirroredHeight];
+			for (int i = 0; i < MirroredHeight; i++)
+			{
+				mirrorImage[k][i] = new int[MirroredWidth];
+				for (int j = 0; j < MirroredWidth; j++)
+				{            
+					mirrorImage[k][i][j] = 0;
+				}
+			}
+		}
 
 		// copying the original image to the larger mirrored image
 		for (int k = 0; k < samples; k++)
@@ -42,8 +60,8 @@ extern "C"
 			{
 				for (int j = 0; j < width; j++)
 				{
-            
-					mirrorImage[k, i + offset, j + offset] = inputImage[k, i, j];
+					mirrorImage[k][i + offset][j + offset] = inputImage[k][i][j];
+					//cout << "mirrorImage value of " << mirrorImage[k][i][j] << " at index: " <<"[" << k << "] [" << i << "] [" << j << "]" << endl; // printing out each pixel intensities
 				}
 			}
 		}
@@ -57,9 +75,9 @@ extern "C"
 				{
 
 					// copy left columns
-					mirrorImage[k, row, i] = inputImage[k, row - offset, offset - i];
+					mirrorImage[k][row][i] = inputImage[k][row - offset][offset - i];
 					// copy right columns
-					mirrorImage[k, row, i + width + offset] = inputImage[k, row - offset, width - i - 2];
+					mirrorImage[k][row][i + width + offset] = inputImage[k][row - offset][width - i - 2];
 				}
 			} // end for
 		} // end for
@@ -72,18 +90,41 @@ extern "C"
 				{
             
 					// copy top rows
-					mirrorImage[k, i, col] = mirrorImage[k, (offset * 2) - i, col];
+					mirrorImage[k][i][col] = mirrorImage[k][(offset * 2) - i][col];
 					// copy bottom rows
-					mirrorImage[k, i + height + offset, col] = mirrorImage[k, height + offset - 2 - i, col];
+					mirrorImage[k][i + height + offset][col] = mirrorImage[k][height + offset - 2 - i][col];
 				}
 			}
 		}
 		#pragma endregion
 
-		int* window = new int[kernel, kernel](); // the kernel window for each sample
+		// initiallizing the kernel widow
+		int** window = new int*[kernel]; // the kernel window for each sample
+		// initiallizing the array values to zero
+		for (int i = 0; i < kernel; i++)
+		{
+			window[i] = new int[kernel];
+			for (int j = 0; j < kernel; j++)
+				{            
+					window[i][j] = 0;
+				}
+		}
 
-
-		int* processedImage = new int[samples, height, width](); // the resulting image after the filtering
+		// initializing the resulting image
+		int*** processedImage = new int**[samples, height, width]; // the resulting image after the filtering
+		// initiallizing the array values to zero
+		for (int k = 0; k < samples; k++)
+		{
+			processedImage[k] = new int*[height];
+			for (int i = 0; i < height; i++)
+			{
+				processedImage[k][i] = new int[width];
+				for (int j = 0; j < width; j++)
+				{            
+					processedImage[k][i][j] = 0;
+				}
+			}
+		}
 
 		#pragma region Applying kernel to every pixel in image
 		// Consider adding if statement for samples
@@ -98,10 +139,12 @@ extern "C"
 					double addedsum = 0;
 					double selected = 0;
 
-					int mean;
+					int mean; // initializing the mean variable
 
-					int temp = mirrorImage[k, i, j];
+					// the current pixel that is being processed. Also the center pixel of the kernel to be created.
+					int temp = mirrorImage[k][i][j]; 
 
+					// *** this loop is commented because we may create the kernel at the same time we calculate a tranformation method (mean, median) *** // 
 					//for (int l = 0; l < kernel; l++) // kernel height
 					//{
 					//    for (int m = 0; m < kernel; m++) // kernel width
@@ -115,13 +158,19 @@ extern "C"
 					{
 						for (int m = 0; m < kernel; m++) // kernel width
 						{
-							window[l, m] = mirrorImage[k, i - offset + l, j - offset + m]; // applying the intensity values to the kernel window
+							window[l][m] = mirrorImage[k][i - offset + l][j - offset + m]; // applying the intensity values to the kernel window
+							/* this if statement is commented because of the fact that Project VEGA seems to take the 
+							 * center pixel into account as well... */
 							//if (l != offset || m != offset) // as long as the pixel to be processed in not the center pixel
 							//{
-								if (abs(window[l, m] - temp) <= EV) // obtaning the absolute difference of the pixel within the kernel to the offset
-								{                                    
+							    // ***** obtaning the absolute difference of the pixel within the kernel to the offset ***** //
+								if (abs(window[l][m] - temp) <= EV) 
+								{  
+									// **TODO: maybe add switch/case statement for mean and median methods?
+
+									// used for mean method:
 									selected++; // incrementing the counter for the pixel within the kernel
-									addedsum += window[l, m]; // adding the intenities within the kernel to one variable
+									addedsum += window[l][m]; // adding the intenities within the kernel to one variable
 								}
 							//}
 						}
@@ -131,185 +180,36 @@ extern "C"
 					// if no pixels in kernel matched EV parameter, set to the center pixel
 					if (selected == 0)
 					{
-						mean = window[offset, offset];
+						mean = window[offset][offset]; // the center coordinate of a kernel
 					}
 					else
 					{
-						mean = int(addedsum / selected);
+						mean = int(addedsum / selected); // all added values, divided by the number of elements
 					}
 
 					// tranfering the mean values to the resulting image
-					processedImage[k, i - offset, j - offset] = int(mean);                      
+					processedImage[k][i - offset][j - offset] = int(mean);                      
 				}   
 			}
 		} // end of EV filtering   
 		#pragma endregion
 
-		int lol = 99;
-		return lol;
+		// Initializing the 1 dimentional array buffer
+		int* processedImageBuffer = new int[samples * width * height];
+
+		// converting the 3 dimentional array to a 1 dimentional buffer for C#
+		for (int k = 0; k < samples; k++) // the samples per pixel
+		{
+			for (int i = 0; i < height; i++) // the height (or column) of an image
+			{
+				for (int j = 0; j < width; j++) // the width (or row) of an image
+				{            
+					processedImageBuffer[((width * samples) * i) + (samples * j) + k] = processedImage[k][i][j]; // assigining all values
+				}
+			}
+		}
+
+		// outputs the 1 dimentional array buffer.
+		return processedImageBuffer;
 	}
-
-
-
-	//__declspec(dllexport) int getImage(unsigned char*** inputImage, int height, int width, int samples, int kernel, int EV)//wchar_t *phrase)
-	//{
-	//	int offset = (kernel - 3) / 2 + 1; // calculation of the center 
-	//	//inputImage = new int[];
-
-	//	#pragma region Mirroring the image
-	//	// Mirrorimage before the creation of the kernel
-	//	int MirroredHeight = height + (offset * 2);
-	//	int MirroredWidth = width + (offset * 2);
-
-	//	//array<Byte,3>^ inputImage = gcnew array<Byte,3>(samples, height, width);
-	//	//array<Byte,3>^ mirrorImage = gcnew array<Byte,3>(samples, MirroredHeight, MirroredWidth);
-
-	//	unsigned char*** mirrorImage = new unsigned char**[samples];
-
-	//	// copying the original image to the larger mirrored image
-	//	for (int k = 0; k < samples; k++)
-	//	{
-	//		mirrorImage[samples] = new unsigned char*[height];
-	//		for (int i = 0; i < height; i++)
-	//		{
-	//			mirrorImage[samples][height] = new unsigned char[width];
-	//			for (int j = 0; j < width; j++)
-	//			{          
-	//				mirrorImage[k, i + offset, j + offset] = inputImage[k, i, j];
-	//			}
-	//		}
-	//	}
-
-	//	// copy columns work! =]
-	//	for (int k = 0; k < samples; k++)
-	//	{
-	//		for (int i = 0; i < offset; i++) // 0~2
-	//		{
-	//			for (int row = offset; row < offset + height; row++) // 3~514
-	//			{
-
-	//				// copy left columns
-	//				mirrorImage[k, row, i] = inputImage[k, row - offset, offset - i];
-	//				// copy right columns
-	//				mirrorImage[k, row, i + width + offset] = inputImage[k, row - offset, width - i - 2];
-	//			}
-	//		} // end for
-	//	} // end for
-
-	//	for (int k = 0; k < samples; k++)
-	//	{
-	//		for (int i = 0; i < offset; i++)
-	//		{
-	//			for (int col = 0; col < width + (offset * 2); col++)
-	//			{
- //           
-	//				// copy top rows
-	//				mirrorImage[k, i, col] = mirrorImage[k, (offset * 2) - i, col];
-	//				// copy bottom rows
-	//				mirrorImage[k, i + height + offset, col] = mirrorImage[k, height + offset - 2 - i, col];
-	//			}
-	//		}
-	//	}
-	//	#pragma endregion
-
-	//	//array<Byte,2>^ window = gcnew array<Byte,2>(kernel, kernel); // the kernel window for each sample
-
-	//	unsigned char** window = new unsigned char*[kernel];
-	//	for (int i = 0; i < height; i++)
-	//	{
-	//		window[kernel] = new unsigned char[kernel];
-	//	}
-
-	//	//array<Byte,3>^ processedImage = gcnew array<Byte,3>(samples, height, width); // the resulting image after the filtering
-
-	//	unsigned char*** processedImage = new unsigned char**[samples];
-
-	//	// Allocation of the processed image
-	//	for (int k = 0; k < samples; k++)
-	//	{
-	//		processedImage[samples] = new unsigned char*[height];
-	//		for (int i = 0; i < height; i++)
-	//		{
-	//			processedImage[samples][height] = new unsigned char[width];
-	//		}
-	//	}
-	//	#pragma region Applying kernel to every pixel in image
-	//	// Consider adding if statement for samples
-	//	for (int k = 0; k < samples; k++)
-	//	{ 
-	//		for (int i = offset; i < MirroredHeight - offset; i++)
-	//		{
-	//			for (int j = offset; j < MirroredWidth - offset; j++)
-	//			{                    
- //                                  
-	//				#pragma region Kernel
-	//				// Begin creation of kernel
-	//				double addedsum = 0;
-	//				double selected = 0;
-
-	//				int mean;
-
-	//				int temp = mirrorImage[k, i, j];
-
-	//				//for (int l = 0; l < kernel; l++) // kernel height
-	//				//{
-	//				//    for (int m = 0; m < kernel; m++) // kernel width
-	//				//    {
-	//				//        window[l, m] = mirrorImage[k, i - offset + l, j - offset + m]; // applying the intensity values to the kernel window
-	//				//	  }
-	//				//}
-
-	//				// loops collecting the pixels within the kernel meeting the EV criterion and adding to addedsum temp var
-	//				for (int l = 0; l < kernel; l++) // kernel height
-	//				{
-	//					for (int m = 0; m < kernel; m++) // kernel width
-	//					{
-	//						window[l, m] = mirrorImage[k, i - offset + l, j - offset + m]; // applying the intensity values to the kernel window
-	//						//if (l != offset || m != offset) // as long as the pixel to be processed in not the center pixel
-	//						//{
-	//							if (abs(window[l, m] - temp) <= EV) // obtaning the absolute difference of the pixel within the kernel to the offset
-	//							{                                    
-	//								selected++; // incrementing the counter for the pixel within the kernel
-	//								addedsum += window[l, m]; // adding the intenities within the kernel to one variable
-	//							}
-	//						//}
-	//					}
-	//				}
-
-	//				// calulating the mean of kernel                      
-	//				// if no pixels in kernel matched EV parameter, set to the center pixel
-	//				if (selected == 0)
-	//				{
-	//					mean = window[offset, offset];
-	//				}
-	//				else
-	//				{
-	//					mean = int(addedsum / selected);
-	//				}
-
-	//				// tranfering the mean values to the resulting image
-	//				processedImage[k, i - offset, j - offset] = int(mean);
-
-	//				#pragma endregion                        
-	//			}   
-	//		}
-	//	} // end of EV filtering   
-	//	#pragma endregion
-
-	//	//  Deallocate 3D array
-	//	for(int i = 0; i < samples; i++)
-	//	{
-	//		for(int j = 0; j < width; j++)
-	//		{
-	//			delete[] mirrorImage[i][j];
-	//		}
- //
-	//		delete[] mirrorImage[i];
-	//	}
-	//	delete[] mirrorImage;
-
-	//	//return processedImage;
-	//	int lol = 99;
-	//	return lol;
-	//}
 }

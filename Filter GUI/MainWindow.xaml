@@ -5,7 +5,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-        </Grid.ColumnDefinitions>        
+        </Grid.ColumnDefinitions>
         <GroupBox Header="Load Image" Height="80" Margin="10,10,10,0" VerticalAlignment="Top">
             <Grid>
                 <Label Content="Tiff Image:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
@@ -14,8 +14,8 @@
             </Grid>
         </GroupBox>
         <RadioButton x:Name="EV_RadioButton" Content="Rank-Order EV Filter" HorizontalAlignment="Left" Margin="138,106,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top"/>
-        <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top"/>
+        <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top" IsEnabled="False"/>
+        <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top" IsEnabled="False"/>
         <GroupBox Header="Filter Properties" Height="152" Margin="10,133,10,0" VerticalAlignment="Top">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -36,8 +36,8 @@
                         <ComboBox Margin="19,27,19,0" VerticalAlignment="Top" MinWidth="110">
                             <ComboBoxItem Content="Mean"/>
                             <ComboBoxItem Content="Median"/>
-                            <ComboBoxItem Content="Cut off"/>
-                            <ComboBoxItem Content="Multivalued"/>
+                            <ComboBoxItem Content="Cut off" IsEnabled="False"/>
+                            <ComboBoxItem Content="Multivalued" IsEnabled="False"/>
                         </ComboBox>
                     </Grid>
                 </GroupBox>
