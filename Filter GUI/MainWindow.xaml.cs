@@ -30,7 +30,7 @@ namespace Filter_GUI
 
         // Importing the C++ EV Filter dynamic link library with a P/Invoke call
         [DllImport("EV_Filter.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)]
-        public static extern IntPtr getImage([In, Out] int[] inputImage, int height, int width, int samples, int kernel, int EV);
+        public static extern IntPtr getImage([In, Out] byte[] inputImage, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV);
         
         public MainWindow()
         {
@@ -73,7 +73,7 @@ namespace Filter_GUI
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void loadImageButton_Click(object sender, RoutedEventArgs e)
         {
             // Create OpenFileDialog 
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
@@ -89,13 +89,13 @@ namespace Filter_GUI
             // Checks if value is true
             if (result == true)
             {
-                textBox1.Text = dlg.FileName;
+                textBox.Text = dlg.FileName;
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void previewButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(textBox1.Text))
+            if (string.IsNullOrEmpty(textBox.Text))
             {
                 MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
@@ -104,7 +104,7 @@ namespace Filter_GUI
                 }
             }
 
-            Tiff image = Tiff.Open(textBox1.Text, "r");
+            Tiff image = Tiff.Open(textBox.Text, "r");
 
             // Obtain basic tag information of the image
             int width = image.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
@@ -118,9 +118,7 @@ namespace Filter_GUI
             // reserve memory for the size of image
 
             // creating the 1 dimentional buffer containing information for ALL 3 DIMENTIONS
-            int[] inputImageBuffer = new int[samples * height * width];
-
-            byte[] test = new byte[samples * height * width];
+            byte[] inputImageBuffer = new byte[samples * height * width];
 
             // loop gathering the values from a single scanline at a time
             for (int i = 0; i < height; i++)
@@ -130,44 +128,126 @@ namespace Filter_GUI
                 {
                     // writing the entire image as a 1 dimentional integer buffer.
                     inputImageBuffer[image.ScanlineSize() * i + j] = scanline[j];
-                    test[image.ScanlineSize() * i + j] = Convert.ToByte(inputImageBuffer[image.ScanlineSize() * i + j]);
                 }
             } // end grabbing intensity values
 
             // read bytes of an image
-            // byte[] ByteImageBuffer = File.ReadAllBytes(textBox1.Text);
+            // byte[] ByteImageBuffer = File.ReadAllBytes(textBox.Text);
 
             #region Initialization and processing
             // the kernel window to be used
-            int kernel = 3;
+            int kernelHeight = 0;
 
-            // the paremeter to be used for the filter
-            int Filter_Parameter = 35;
+            if (textBox1.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                char[] c = textBox1.Text.ToCharArray(); // seperates compbox elements into an array
+
+                for (int i = 0; i < c.Length; i++)
+                {
+                    kernelHeight = Convert.ToInt32(textBox1.Text.Substring(0, i + 1));
+                }
+
+                // ************************  Let the user enter any odd number as size of the pixel
+                if (kernelHeight % 2 != 1)
+                {
+                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (result == MessageBoxResult.OK)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            int kernelWidth = 0;
+
+            if (textBox2.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                char[] c = textBox2.Text.ToCharArray(); // seperates compbox elements into an array
+
+                for (int i = 0; i < c.Length; i++)
+                {
+                    kernelWidth = Convert.ToInt32(textBox2.Text.Substring(0, i + 1));
+                }
+
+                // ************************  Let the user enter any odd number as size of the pixel
+                if (kernelWidth % 2 != 1)
+                {
+                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (result == MessageBoxResult.OK)
+                    {
+                        return;
+                    }
+                }
+            }
+
+
+            // the paremeter to be used for the filter            
+            if (textBox3.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+
+            int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
             // initiallizing the 1 dimentional resulting image
-            int[] processedImageBuffer = new int[samples * width * height];
+            byte[] processedImageBuffer = new byte[samples * width * height];
 
             // Calling the native C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernel, Filter_Parameter);
+            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
             #endregion
 
-            var imageSource = new BitmapImage();
-            imageSource.BeginInit();
-            imageSource.StreamSource = new MemoryStream(test);
-            imageSource.EndInit();
+            PixelFormat pixelFormat;
 
-            var Preview = new Preview(imageSource);
-            Preview.Show();
+            if (samples == 1) pixelFormat = PixelFormats.Gray8;
+            else if (samples == 3) pixelFormat = PixelFormats.Rgb24;
+            else
+            {
+                pixelFormat = PixelFormats.Rgb24;
+                MessageBoxResult result = MessageBox.Show("This program does not support alpha channels.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
 
+            var bytesPerPixel = (pixelFormat.BitsPerPixel + 7) / 8;
+
+            var bitmap = BitmapImage.Create(width, height, 96, 96, pixelFormat, null, processedImageBuffer, image.ScanlineSize());
+
+            var Preview = new Preview(bitmap);
+            Preview.Show();            
         }
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
+        private void processImageButton_Click(object sender, RoutedEventArgs e)
         {
             #region load image
-            if (string.IsNullOrEmpty(textBox1.Text))
+            if (string.IsNullOrEmpty(textBox.Text))
             {
                 MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
@@ -176,7 +256,7 @@ namespace Filter_GUI
                 }
             }
 
-            Tiff image = Tiff.Open(textBox1.Text, "r");
+            Tiff image = Tiff.Open(textBox.Text, "r");
 
             // Obtain basic tag information of the image
             int width = image.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
@@ -191,7 +271,7 @@ namespace Filter_GUI
             // reserve memory for the size of image
 
             // creating the 1 dimentional buffer containing information for ALL 3 DIMENTIONS
-            int[] inputImageBuffer = new int[samples * height * width];
+            byte[] inputImageBuffer = new byte[samples * height * width];
 
             // loop gathering the values from a single scanline at a time
             for (int i = 0; i < height; i++)
@@ -200,13 +280,13 @@ namespace Filter_GUI
                 for (int j = 0; j < samples * width; j++)
                 {
                     // writing the entire image as a 1 dimentional integer buffer.
-                    inputImageBuffer[image.ScanlineSize() * i + j] = Convert.ToInt32(scanline[j]);
+                    inputImageBuffer[image.ScanlineSize() * i + j] = scanline[j];
                 }
             } // end grabbing intensity values
 
             /* --- Old implementation. writes the scanlines into a 3 dimentional array. ---
              *
-             *   int[, ,] inputImage = new int[samples, height, width];
+             *   byte[, ,] inputImage = new byte[samples, height, width];
              *
              *   for (int k = 0; k < samples; k++)
              *   {
@@ -223,16 +303,87 @@ namespace Filter_GUI
 
             #region Initialization and processing
             // the kernel window to be used
-            int kernel = 3;
+            int kernelHeight = 0;
 
-            // the paremeter to be used for the filter
-            int Filter_Parameter = 35;
+            if (textBox1.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                char[] c = textBox1.Text.ToCharArray(); // seperates compbox elements into an array
+
+                for (int i = 0; i < c.Length; i++)
+                {
+                    kernelHeight = Convert.ToInt32(textBox1.Text.Substring(0, i + 1));
+                }
+
+                // ************************  Let the user enter any odd number as size of the pixel
+                if (kernelHeight % 2 != 1)
+                {
+                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (result == MessageBoxResult.OK)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            int kernelWidth = 0;
+
+            if (textBox2.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                char[] c = textBox2.Text.ToCharArray(); // seperates compbox elements into an array
+
+                for (int i = 0; i < c.Length; i++)
+                {
+                    kernelWidth = Convert.ToInt32(textBox2.Text.Substring(0, i + 1));
+                }
+
+                // ************************  Let the user enter any odd number as size of the pixel
+                if (kernelWidth % 2 != 1)
+                {
+                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (result == MessageBoxResult.OK)
+                    {
+                        return;
+                    }
+                }
+            }
+            
+
+            // the paremeter to be used for the filter            
+            if (textBox3.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No Filter parameter entered.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+
+            int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
             // initiallizing the 1 dimentional resulting image
-            int[] processedImageBuffer = new int[samples * width * height];
+            byte[] processedImageBuffer = new byte[samples * width * height];
 
             // Calling the native C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernel, Filter_Parameter);
+            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
@@ -310,6 +461,45 @@ namespace Filter_GUI
         private void Window_Closed(object sender, EventArgs e)
         {
             App.Current.Shutdown();
+        }
+
+        private void EV_RadioButton_Click(object sender, RoutedEventArgs e)
+        {
+            filterLabel.Content = "EV Parameter:";
+            ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
+            Mean.IsEnabled = true;
+            ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
+            Median.IsEnabled = false;
+            ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
+            cutOff.IsEnabled = false;
+            ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
+            Multivalued.IsEnabled = false;
+        }
+
+        private void ER_RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            filterLabel.Content = "ER Parameter:";
+            ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
+            Mean.IsEnabled = false;
+            ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
+            Median.IsEnabled = false;
+            ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
+            cutOff.IsEnabled = false;
+            ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
+            Multivalued.IsEnabled = false;
+        }
+
+        private void KNV_RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            filterLabel.Content = "KNV Parameter:";
+            ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
+            Mean.IsEnabled = false;
+            ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
+            Median.IsEnabled = true;
+            ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
+            cutOff.IsEnabled = false;
+            ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
+            Multivalued.IsEnabled = false;
         }
     }
 }

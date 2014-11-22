@@ -19,7 +19,7 @@ namespace Filter_GUI
     /// </summary>
     public partial class Preview : Window
     {
-        public Preview(BitmapImage previewimage)
+        public Preview(BitmapSource previewimage)
         {
             InitializeComponent();
 

@@ -9,13 +9,13 @@
         <GroupBox Header="Load Image" Height="80" Margin="10,10,10,0" VerticalAlignment="Top">
             <Grid>
                 <Label Content="Tiff Image:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-                <TextBox x:Name="textBox1" Height="23" Margin="81,10,124,0" VerticalAlignment="Top" PreviewDragEnter="TextBox_PreviewDragEnter" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop"/>
-                <Button Content="Load Image. . ." HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Padding="10,2" Click="Button_Click" HorizontalContentAlignment="Left" VerticalContentAlignment="Top"/>
+                <TextBox x:Name="textBox" Height="23" Margin="81,10,124,0" VerticalAlignment="Top" PreviewDragEnter="TextBox_PreviewDragEnter" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop"/>
+                <Button x:Name="loadImageButton" Content="Load Image. . ." HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Padding="10,2" Click="loadImageButton_Click" HorizontalContentAlignment="Left" VerticalContentAlignment="Top"/>
             </Grid>
         </GroupBox>
-        <RadioButton x:Name="EV_RadioButton" Content="Rank-Order EV Filter" HorizontalAlignment="Left" Margin="138,106,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top" IsEnabled="False"/>
-        <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top" IsEnabled="False"/>
+        <RadioButton x:Name="EV_RadioButton" Content="Rank-Order EV Filter" HorizontalAlignment="Left" Margin="139,106,0,0" VerticalAlignment="Top" IsChecked="True" Click="EV_RadioButton_Click"/>
+        <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top" Checked="ER_RadioButton_Checked"/>
+        <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top" Checked="KNV_RadioButton_Checked"/>
         <GroupBox Header="Filter Properties" Height="152" Margin="10,133,10,0" VerticalAlignment="Top">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -27,15 +27,15 @@
                     <Grid>
                         <Label Content="Vertical:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
                         <Label Content="Horizontal:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0"/>
-                        <TextBox Height="23" Margin="98,10,22,0" TextWrapping="Wrap" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
-                        <TextBox Height="23" Margin="98,44,22,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="textBox1" Height="23" Margin="98,10,22,0" TextWrapping="Wrap" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
+                        <TextBox x:Name="textBox2" Height="23" Margin="98,44,22,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="Transformation Method" Margin="10,10,6,0" VerticalAlignment="Top" Height="100">
                     <Grid>
-                        <ComboBox Margin="19,27,19,0" VerticalAlignment="Top" MinWidth="110">
+                        <ComboBox x:Name="transComboBox" Margin="19,27,19,0" VerticalAlignment="Top" MinWidth="110">
                             <ComboBoxItem Content="Mean"/>
-                            <ComboBoxItem Content="Median"/>
+                            <ComboBoxItem Content="Median" IsEnabled="False"/>
                             <ComboBoxItem Content="Cut off" IsEnabled="False"/>
                             <ComboBoxItem Content="Multivalued" IsEnabled="False"/>
                         </ComboBox>
@@ -43,16 +43,16 @@
                 </GroupBox>
                 <GroupBox Header="Correction" Margin="7,10,10,0" VerticalAlignment="Top" Height="100" Grid.Column="2">
                     <Grid>
-                        <Label Content="EV Parameter:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
-                        <Label Content="Impulse Correction:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0"/>
-                        <TextBox Height="23" Margin="136,10,22,0" TextWrapping="Wrap" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
-                        <TextBox Height="23" Margin="136,41,22,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <Label x:Name="filterLabel" Content="EV Parameter:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
+                        <Label Content="Impulse Correction:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0" IsEnabled="False"/>
+                        <TextBox x:Name="textBox3" Height="23" Margin="136,10,22,0" TextWrapping="Wrap" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
+                        <TextBox x:Name="textbox4" Height="23" Margin="136,41,22,0" TextWrapping="Wrap" VerticalAlignment="Top" IsEnabled="False"/>
                     </Grid>
                 </GroupBox>
             </Grid>
         </GroupBox>
-        <Button Content="Preview. . ." HorizontalAlignment="Right" Margin="0,298,113,0" VerticalAlignment="Top" Padding="10,2" Click="Button_Click_1"/>
-        <Button Content="Process Image" HorizontalAlignment="Right" Margin="0,298,10,0" VerticalAlignment="Top" Padding="10,2" Click="Button_Click_2"/>
+        <Button x:Name="previewButton" Content="Preview. . ." HorizontalAlignment="Right" Margin="0,298,113,0" VerticalAlignment="Top" Padding="10,2" Click="previewButton_Click"/>
+        <Button x:Name="processImageButton" Content="Process Image" HorizontalAlignment="Right" Margin="0,298,10,0" VerticalAlignment="Top" Padding="10,2" Click="processImageButton_Click"/>
     </Grid>
 </Window>
 
