@@ -28,9 +28,13 @@ namespace Filter_GUI
         //[DllImport("EV_Filter.dll", CallingConvention = CallingConvention.Cdecl, CharSet=CharSet.Auto)]
         //public static extern int[,,] getImage([MarshalAs(UnmanagedType.LPArray)]int[, ,] inputImage, int height, int width, int samples, int kernel, int EV);
 
-        // Importing the C++ EV Filter dynamic link library with a P/Invoke call
+        // Importing the C++ MirrorImage dynamic link library with a P/Invoke call
+        [DllImport("MirrorImage.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)]
+        public static extern IntPtr mirrorImage([In, Out] byte[] inputImageBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth);
+
+        // Importing the C++ EV_Filter dynamic link library with a P/Invoke call
         [DllImport("EV_Filter.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)]
-        public static extern IntPtr getImage([In, Out] byte[] inputImage, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV);
+        public static extern IntPtr getImage(IntPtr unmanagedMirrorBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV);
         
         public MainWindow()
         {
@@ -95,6 +99,7 @@ namespace Filter_GUI
 
         private void previewButton_Click(object sender, RoutedEventArgs e)
         {
+            #region Initialization
             if (string.IsNullOrEmpty(textBox.Text))
             {
                 MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -134,7 +139,6 @@ namespace Filter_GUI
             // read bytes of an image
             // byte[] ByteImageBuffer = File.ReadAllBytes(textBox.Text);
 
-            #region Initialization and processing
             // the kernel window to be used
             int kernelHeight = 0;
 
@@ -209,14 +213,23 @@ namespace Filter_GUI
                     return;
                 }
             }
+            #endregion
+
+            #region Processing
 
             int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
             // initiallizing the 1 dimentional resulting image
+            byte[] mirrorImageBuffer = new byte[samples * width * height];
+
+            // initiallizing the 1 dimentional resulting image
             byte[] processedImageBuffer = new byte[samples * width * height];
 
-            // Calling the native C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
+            // Calling the native mirrorImage C++ function via a P/Invoke in C#
+            IntPtr unmanagedMirrorBuffer = mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth);
+
+            // Calling the native EV_Filter C++ function via a P/Invoke in C#
+            IntPtr unmanagedArray = getImage(unmanagedMirrorBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
@@ -299,9 +312,7 @@ namespace Filter_GUI
              *       }
              *   } // end grabbing intensity values
              */
-            #endregion
 
-            #region Initialization and processing
             // the kernel window to be used
             int kernelHeight = 0;
 
@@ -376,14 +387,23 @@ namespace Filter_GUI
                     return;
                 }
             }
+            #endregion
+
+            #region Processing
 
             int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
             // initiallizing the 1 dimentional resulting image
+            byte[] mirrorImageBuffer = new byte[samples * width * height];
+
+            // initiallizing the 1 dimentional resulting image
             byte[] processedImageBuffer = new byte[samples * width * height];
 
-            // Calling the native C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
+            // Calling the native mirrorImage C++ function via a P/Invoke in C#
+            IntPtr unmanagedMirrorBuffer = mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth);
+
+            // Calling the native EV_Filter C++ function via a P/Invoke in C#
+            IntPtr unmanagedArray = getImage(unmanagedMirrorBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
@@ -504,7 +524,7 @@ namespace Filter_GUI
         {
             filterLabel.Content = "KNV Parameter:";
             transComboBox.Items.Clear();
-            transComboBox.Items.Add("Mean");
+            transComboBox.Items.Add("Median");
         } 
     }
 }
