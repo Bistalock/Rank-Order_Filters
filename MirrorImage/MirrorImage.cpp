@@ -1,5 +1,5 @@
 /*
- *		Project Name: Mirror Image function
+ *      Project Name: Mirror Image function
  *      Date Written: October 17, 2014
  *      Created by: Hiroyuki Plumlee. Rewritten by Gabriel Del Pino.
  */ 

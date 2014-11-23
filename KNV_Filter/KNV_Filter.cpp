@@ -9,7 +9,6 @@
 
 
 #include "stdafx.h"
-#include <windows.h>
 #include <cstdio>
 #include <algorithm>
 #include <cmath>
@@ -26,8 +25,8 @@ extern "C" {
 	 __declspec(dllexport) unsigned char* processKNV(unsigned char* imgBuffer, int kernelSize, int maxRow, int maxCol, int numChannels) { //, Method m) { This is an optional method parameter incase we want to implement a global enumeration as demonstrated above.
     
 		int offset = (kernelSize - 1) / 2;
-    
-		unsigned char*** img = new unsigned char**[numChannels];
+		// Initiallizing the 3 dimentional dynamic array as a series of pointers
+		unsigned char*** img = new unsigned char**[numChannels]; 
 
 			// Converting the 1 dimentional array to a 3 dimentional array for C++
 			for (int k = 0; k < numChannels; k++) {
@@ -66,7 +65,7 @@ extern "C" {
 				// There is an error in this loop
 				for(currentX; currentX < rightCol; currentX++) {
 					for(currentY; currentY < bottomRow; currentY++) {
-						currentKernelValues[kv++] = img[i][currentX][currentY]; // cannot assign currentKernelvalues[] from img[][][]. is it currentKernelValues[][]?
+						currentKernelValues[kv++] = img[i][currentX][currentY]; //** ERROR: cannot assign currentKernelvalues[] from img[][][]. is it currentKernelValues[][]?
 					}
 				}
 				//KERNEL STORED IN currentKernelValues//
@@ -79,7 +78,7 @@ extern "C" {
 			}
 		}
 
-			// Converting the 1 dimentional array to a 3 dimentional array for C++
+			// Converting the 3 dimentional array to a 1 dimentional array for C#
 			for (int k = 0; k < numChannels; k++) {
 				for (int i = 0; i < maxCol; i++) {
 					for (int j = 0; j < maxRow; j++) {            

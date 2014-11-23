@@ -1,5 +1,5 @@
 /*
- *		Project Name: Rank-Order EV filter
+ *      Project Name: Rank-Order EV filter
  *      Date Written: October 17, 2014
  *      Created by: Gabriel Del Pino. Portions inspired by Hiroyuki Plumlee.
  */  
@@ -9,6 +9,7 @@
 
 extern "C"
 {
+	// **TODO: incorporate other transformation methods - currently only works with the mean values
 	// Function requires a 1 dimentional buffer of an image, along as various parameters
 	// The image array buffer is later converted to a 3 dimentional dynamic array in the format of inputImage[Samples][Height][Width]
 	__declspec(dllexport) unsigned char* getImage(unsigned char* mirrorImageBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV)
@@ -20,6 +21,7 @@ extern "C"
 		int MirroredHeight = height + (offsetHeight * 2);
 		int MirroredWidth = width + (offsetWidth * 2);
 
+		// Initiallizing the 3 dimentional dynamic array as a series of pointers
 		unsigned char*** mirrorImage = new unsigned char**[samples];
 
 		// Converting the 1 dimentional array to a 3 dimentional array for C++
