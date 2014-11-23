@@ -35,9 +35,6 @@
                     <Grid>
                         <ComboBox x:Name="transComboBox" Margin="19,27,19,0" VerticalAlignment="Top" MinWidth="110">
                             <ComboBoxItem Content="Mean"/>
-                            <ComboBoxItem Content="Median" IsEnabled="False"/>
-                            <ComboBoxItem Content="Cut off" IsEnabled="False"/>
-                            <ComboBoxItem Content="Multivalued" IsEnabled="False"/>
                         </ComboBox>
                     </Grid>
                 </GroupBox>

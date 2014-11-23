@@ -465,41 +465,46 @@ namespace Filter_GUI
 
         private void EV_RadioButton_Click(object sender, RoutedEventArgs e)
         {
+            //var editor = sender as Style;
+
+            //var s = new Style(typeof(ListBoxItem));
+            //var enableSetter = new Setter { Property = IsEnabledProperty, Value = false };
+            //s.Setters.Add(enableSetter);
+
+            //editor.ItemContainerStyle = s; 
+
+            //ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
+            //Mean.IsEnabled = false;
+            //ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
+            //Median.IsEnabled = true;
+            //ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
+            //cutOff.IsEnabled = false;
+            //ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
+            //Multivalued.IsEnabled = false;       
             filterLabel.Content = "EV Parameter:";
-            ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
-            Mean.IsEnabled = true;
-            ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
-            Median.IsEnabled = false;
-            ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
-            cutOff.IsEnabled = false;
-            ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
-            Multivalued.IsEnabled = false;
+            transComboBox.Items.Clear();
+            transComboBox.Items.Add("Mean");
         }
+
+        //private void EV_RadioButton_Checked(object sender, RoutedEventArgs e)
+        //{
+        //    filterLabel.Content = "EV Parameter:";
+        //    transComboBox.Items.Clear();
+        //    transComboBox.Items.Add("Mean");
+        //}
 
         private void ER_RadioButton_Checked(object sender, RoutedEventArgs e)
         {
             filterLabel.Content = "ER Parameter:";
-            ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
-            Mean.IsEnabled = false;
-            ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
-            Median.IsEnabled = false;
-            ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
-            cutOff.IsEnabled = false;
-            ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
-            Multivalued.IsEnabled = false;
+            transComboBox.Items.Clear();
+
         }
 
         private void KNV_RadioButton_Checked(object sender, RoutedEventArgs e)
         {
             filterLabel.Content = "KNV Parameter:";
-            ComboBoxItem Mean = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(0);
-            Mean.IsEnabled = false;
-            ComboBoxItem Median = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(1);
-            Median.IsEnabled = true;
-            ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
-            cutOff.IsEnabled = false;
-            ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
-            Multivalued.IsEnabled = false;
-        }
+            transComboBox.Items.Clear();
+            transComboBox.Items.Add("Mean");
+        } 
     }
 }
