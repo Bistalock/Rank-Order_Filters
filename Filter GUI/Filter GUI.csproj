@@ -37,6 +37,10 @@
   <PropertyGroup>
     <ApplicationIcon>RO.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="BitMiracle.LibTiff.NET">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\External\libtiff.net_bin-2.4.500.0\BitMiracle.LibTiff.NET.dll</HintPath>
@@ -98,6 +102,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

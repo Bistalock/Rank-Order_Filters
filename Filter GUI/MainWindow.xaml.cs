@@ -136,8 +136,16 @@ namespace Filter_GUI
                 }
             } // end grabbing intensity values
 
-            // read bytes of an image
-            // byte[] ByteImageBuffer = File.ReadAllBytes(textBox.Text);
+            // the transformation method to be used for the filter            
+            if (transComboBox.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No Transformation method entered.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
 
             // the kernel window to be used
             int kernelHeight = 0;
@@ -145,7 +153,7 @@ namespace Filter_GUI
             if (textBox1.Text == "")
             {
                 // Error Windows when no number of samples entered
-                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("No kernel vertical size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -163,7 +171,7 @@ namespace Filter_GUI
                 // ************************  Let the user enter any odd number as size of the pixel
                 if (kernelHeight % 2 != 1)
                 {
-                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBoxResult result = MessageBox.Show("The kernel window only accepts odd integers.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     if (result == MessageBoxResult.OK)
                     {
                         return;
@@ -176,7 +184,7 @@ namespace Filter_GUI
             if (textBox2.Text == "")
             {
                 // Error Windows when no number of samples entered
-                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("The kernel window only accepts odd integers.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -194,7 +202,7 @@ namespace Filter_GUI
                 // ************************  Let the user enter any odd number as size of the pixel
                 if (kernelWidth % 2 != 1)
                 {
-                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBoxResult result = MessageBox.Show("The kernel window only accepts odd integers.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     if (result == MessageBoxResult.OK)
                     {
                         return;
@@ -207,7 +215,7 @@ namespace Filter_GUI
             if (textBox3.Text == "")
             {
                 // Error Windows when no number of samples entered
-                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("No filter parameter entered.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -241,7 +249,7 @@ namespace Filter_GUI
             else if (samples == 3) pixelFormat = PixelFormats.Rgb24;
             else
             {
-                pixelFormat = PixelFormats.Rgb24;
+                pixelFormat = PixelFormats.Rgba64;
                 MessageBoxResult result = MessageBox.Show("This program does not support alpha channels.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
@@ -259,7 +267,7 @@ namespace Filter_GUI
 
         private void processImageButton_Click(object sender, RoutedEventArgs e)
         {
-            #region load image
+            #region Initiallization
             if (string.IsNullOrEmpty(textBox.Text))
             {
                 MessageBoxResult result = MessageBox.Show("Please input the TIFF image.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -297,29 +305,40 @@ namespace Filter_GUI
                 }
             } // end grabbing intensity values
 
-            /* --- Old implementation. writes the scanlines into a 3 dimentional array. ---
-             *
-             *   byte[, ,] inputImage = new byte[samples, height, width];
-             *
-             *   for (int k = 0; k < samples; k++)
-             *   {
-             *       for (int i = 0; i < height; i++)
-             *       {
-             *           for (int j = 0; j < width; j++)
-             *           {
-             *               inputImage[k, i, j] = inputImageBuffer[(image.ScanlineSize() * i) + (3 * j) + k];
-             *           }
-             *       }
-             *   } // end grabbing intensity values
-             */
+            ///* --- Old implementation. writes the scanlines into a 3 dimentional array. ---
+            // *
+            // *   byte[, ,] inputImage = new byte[samples, height, width];
+            // *
+            // *   for (int k = 0; k < samples; k++)
+            // *   {
+            // *       for (int i = 0; i < height; i++)
+            // *       {
+            // *           for (int j = 0; j < width; j++)
+            // *           {
+            // *               inputImage[k, i, j] = inputImageBuffer[(image.ScanlineSize() * i) + (3 * j) + k];
+            // *           }
+            // *       }
+            // *   } // end grabbing intensity values
+            // */
+
+            // the transformation method to be used for the filter            
+            if (transComboBox.Text == "")
+            {
+                // Error Windows when no number of samples entered
+                MessageBoxResult result = MessageBox.Show("No Transformation method entered.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (result == MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
 
             // the kernel window to be used
-            int kernelHeight = 0;
+            int kernelHeight = 0; // initializes the kernel height to zero
 
             if (textBox1.Text == "")
             {
                 // Error Windows when no number of samples entered
-                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("No kernel vertical size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -337,7 +356,7 @@ namespace Filter_GUI
                 // ************************  Let the user enter any odd number as size of the pixel
                 if (kernelHeight % 2 != 1)
                 {
-                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBoxResult result = MessageBox.Show("The kernel window only accepts odd integers.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     if (result == MessageBoxResult.OK)
                     {
                         return;
@@ -345,12 +364,12 @@ namespace Filter_GUI
                 }
             }
 
-            int kernelWidth = 0;
+            int kernelWidth = 0; // initializes the kernel width to zero
 
             if (textBox2.Text == "")
             {
                 // Error Windows when no number of samples entered
-                MessageBoxResult result = MessageBox.Show("No kernel size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("No kernel horizontal size selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -368,7 +387,7 @@ namespace Filter_GUI
                 // ************************  Let the user enter any odd number as size of the pixel
                 if (kernelWidth % 2 != 1)
                 {
-                    MessageBoxResult result = MessageBox.Show("Please enter an odd number.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBoxResult result = MessageBox.Show("The kernel window only accepts odd integers.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     if (result == MessageBoxResult.OK)
                     {
                         return;
@@ -381,7 +400,7 @@ namespace Filter_GUI
             if (textBox3.Text == "")
             {
                 // Error Windows when no number of samples entered
-                MessageBoxResult result = MessageBox.Show("No Filter parameter entered.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBoxResult result = MessageBox.Show("No filter parameter entered.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -485,6 +504,14 @@ namespace Filter_GUI
 
         private void EV_RadioButton_Click(object sender, RoutedEventArgs e)
         {
+            filterHeader.Header = "EV Filter Properties";
+            filterLabel.Content = "EV Parameter:";
+            transComboBox.Items.Clear();
+            transComboBox.Items.Add("Mean");
+            previewButton.IsEnabled = true;
+            processImageButton.IsEnabled = true;
+
+            #region Old code
             //var editor = sender as Style;
 
             //var s = new Style(typeof(ListBoxItem));
@@ -500,31 +527,28 @@ namespace Filter_GUI
             //ComboBoxItem cutOff = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(2);
             //cutOff.IsEnabled = false;
             //ComboBoxItem Multivalued = (ComboBoxItem)transComboBox.ItemContainerGenerator.ContainerFromIndex(3);
-            //Multivalued.IsEnabled = false;       
-            filterLabel.Content = "EV Parameter:";
-            transComboBox.Items.Clear();
-            transComboBox.Items.Add("Mean");
+            //Multivalued.IsEnabled = false; 
+            #endregion
         }
-
-        //private void EV_RadioButton_Checked(object sender, RoutedEventArgs e)
-        //{
-        //    filterLabel.Content = "EV Parameter:";
-        //    transComboBox.Items.Clear();
-        //    transComboBox.Items.Add("Mean");
-        //}
 
         private void ER_RadioButton_Checked(object sender, RoutedEventArgs e)
         {
+            filterHeader.Header = "ER Filter Properties";
             filterLabel.Content = "ER Parameter:";
             transComboBox.Items.Clear();
+            previewButton.IsEnabled = false;
+            processImageButton.IsEnabled = false;
 
         }
 
         private void KNV_RadioButton_Checked(object sender, RoutedEventArgs e)
         {
+            filterHeader.Header = "KNV Filter Properties";
             filterLabel.Content = "KNV Parameter:";
             transComboBox.Items.Clear();
             transComboBox.Items.Add("Median");
+            previewButton.IsEnabled = false;
+            processImageButton.IsEnabled = false;
         } 
     }
 }

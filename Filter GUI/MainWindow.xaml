@@ -16,7 +16,7 @@
         <RadioButton x:Name="EV_RadioButton" Content="Rank-Order EV Filter" HorizontalAlignment="Left" Margin="139,106,0,0" VerticalAlignment="Top" IsChecked="True" Click="EV_RadioButton_Click"/>
         <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top" Checked="ER_RadioButton_Checked"/>
         <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top" Checked="KNV_RadioButton_Checked"/>
-        <GroupBox Header="Filter Properties" Height="152" Margin="10,133,10,0" VerticalAlignment="Top">
+        <GroupBox x:Name="filterHeader" Header="EV Filter Properties" Height="152" Margin="10,133,10,0" VerticalAlignment="Top">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="190*"/>
@@ -27,8 +27,8 @@
                     <Grid>
                         <Label Content="Vertical:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
                         <Label Content="Horizontal:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0"/>
-                        <TextBox x:Name="textBox1" Height="23" Margin="98,10,22,0" TextWrapping="Wrap" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
-                        <TextBox x:Name="textBox2" Height="23" Margin="98,44,22,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="textBox1" Height="23" Margin="98,10,22,0" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
+                        <TextBox x:Name="textBox2" Height="23" Margin="98,44,22,0" VerticalAlignment="Top"/>
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="Transformation Method" Margin="10,10,6,0" VerticalAlignment="Top" Height="100">
@@ -42,7 +42,7 @@
                     <Grid>
                         <Label x:Name="filterLabel" Content="EV Parameter:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
                         <Label Content="Impulse Correction:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0" IsEnabled="False"/>
-                        <TextBox x:Name="textBox3" Height="23" Margin="136,10,22,0" TextWrapping="Wrap" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
+                        <TextBox x:Name="textBox3" Height="23" Margin="136,10,22,0" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
                         <TextBox x:Name="textbox4" Height="23" Margin="136,41,22,0" TextWrapping="Wrap" VerticalAlignment="Top" IsEnabled="False"/>
                     </Grid>
                 </GroupBox>
