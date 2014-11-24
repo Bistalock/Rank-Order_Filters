@@ -34,7 +34,7 @@ namespace Filter_GUI
 
         // Importing the C++ EV_Filter dynamic link library with a P/Invoke call
         [DllImport("EV_Filter.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Auto)]
-        public static extern IntPtr getImage(IntPtr unmanagedMirrorBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV);
+        public static extern IntPtr getImage([In, Out] byte[] mirrorImageBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV);
         
         public MainWindow()
         {
@@ -221,14 +221,22 @@ namespace Filter_GUI
                     return;
                 }
             }
+
             #endregion
 
             #region Processing
 
             int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
+            int offsetHeight = (kernelHeight - 3) / 2 + 1; // calculation of the center 
+            int offsetWidth = (kernelWidth - 3) / 2 + 1; // calculation of the center  
+
+            // Mirrorimage before the creation of the kernelTh
+            int MirroredHeight = height + (offsetHeight * 2);
+            int MirroredWidth = width + (offsetWidth * 2);
+
             // initiallizing the 1 dimentional resulting image
-            byte[] mirrorImageBuffer = new byte[samples * width * height];
+            byte[] mirrorImageBuffer = new byte[samples * MirroredHeight * MirroredWidth];
 
             // initiallizing the 1 dimentional resulting image
             byte[] processedImageBuffer = new byte[samples * width * height];
@@ -236,8 +244,11 @@ namespace Filter_GUI
             // Calling the native mirrorImage C++ function via a P/Invoke in C#
             IntPtr unmanagedMirrorBuffer = mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth);
 
+            // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
+            Marshal.Copy(unmanagedMirrorBuffer, mirrorImageBuffer, 0, samples * MirroredWidth * MirroredHeight);
+
             // Calling the native EV_Filter C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(unmanagedMirrorBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
+            IntPtr unmanagedArray = getImage(mirrorImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
@@ -259,7 +270,7 @@ namespace Filter_GUI
 
             var bytesPerPixel = (pixelFormat.BitsPerPixel + 7) / 8;
 
-            var bitmap = BitmapImage.Create(width, height, 96, 96, pixelFormat, null, processedImageBuffer, image.ScanlineSize());
+            var bitmap = BitmapImage.Create(width, height, 96, 96, pixelFormat, null, processedImageBuffer, samples * width);
 
             var Preview = new Preview(bitmap);
             Preview.Show();            
@@ -412,8 +423,15 @@ namespace Filter_GUI
 
             int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
+            int offsetHeight = (kernelHeight - 3) / 2 + 1; // calculation of the center 
+            int offsetWidth = (kernelWidth - 3) / 2 + 1; // calculation of the center  
+
+            // Mirrorimage before the creation of the kernelTh
+            int MirroredHeight = height + (offsetHeight * 2);
+            int MirroredWidth = width + (offsetWidth * 2);
+
             // initiallizing the 1 dimentional resulting image
-            byte[] mirrorImageBuffer = new byte[samples * width * height];
+            byte[] mirrorImageBuffer = new byte[samples * MirroredHeight * MirroredWidth];
 
             // initiallizing the 1 dimentional resulting image
             byte[] processedImageBuffer = new byte[samples * width * height];
@@ -421,8 +439,11 @@ namespace Filter_GUI
             // Calling the native mirrorImage C++ function via a P/Invoke in C#
             IntPtr unmanagedMirrorBuffer = mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth);
 
+            // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
+            Marshal.Copy(unmanagedMirrorBuffer, mirrorImageBuffer, 0, samples * MirroredWidth * MirroredHeight);
+
             // Calling the native EV_Filter C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(unmanagedMirrorBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
+            IntPtr unmanagedArray = getImage(mirrorImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
@@ -455,16 +476,16 @@ namespace Filter_GUI
                     output.SetField(TiffTag.BITSPERSAMPLE, bits);
                     output.SetField(TiffTag.SAMPLESPERPIXEL, samples);
                     output.SetField(TiffTag.ORIENTATION, BitMiracle.LibTiff.Classic.Orientation.TOPLEFT);
-                    output.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
                     output.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-                    output.SetField(TiffTag.ROWSPERSTRIP, height);
+                    output.SetField(TiffTag.ROWSPERSTRIP, 1);
                     output.SetField(TiffTag.XRESOLUTION, 96); //dpiX);
                     output.SetField(TiffTag.YRESOLUTION, 96); //dpiY);
+                    if (samples == 1) output.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
+                    else if (samples == 3) output.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
                     output.SetField(TiffTag.RESOLUTIONUNIT, ResUnit.INCH);
                     output.SetField(TiffTag.COMPRESSION, Compression.NONE);
                     output.SetField(TiffTag.FILLORDER, FillOrder.MSB2LSB);
-                    if (samples == 1) output.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
-                    else if (samples == 3) output.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
+                    
                     #endregion
 
                     // reserve buffer
@@ -478,13 +499,13 @@ namespace Filter_GUI
                         {
                             for (int k = 0; k < samples; k++)
                             {
-                                buffer[samples * j + k] = Convert.ToByte(processedImageBuffer[(image.ScanlineSize() * i) + (samples * j) + k]); // saving the resulting image to file
+                                buffer[samples * j + k] = processedImageBuffer[((samples * width) * i) + (samples * j) + k]; // saving the resulting image to file
                             }
 
                         }
                         // write
                         if (samples == 1) output.WriteScanline(buffer, i);
-                        else if (samples == 3) output.WriteEncodedStrip(i, buffer, image.ScanlineSize());
+                        else if (samples == 3) output.WriteEncodedStrip(i, buffer, samples * width);
                     }
                     // write to file
                     output.WriteDirectory();

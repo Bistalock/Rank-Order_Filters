@@ -8,6 +8,8 @@
 
 extern "C"
 {
+		// Function requires a 1 dimentional buffer of an image, along as various parameters
+	// The image array buffer is later converted to a 3 dimentional dynamic array in the format of inputImage[Samples][Height][Width]
 	_declspec(dllexport) unsigned char* mirrorImage(unsigned char* inputImageBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth)
 	{
 		int offsetHeight = (kernelHeight - 3) / 2 + 1; // calculation of the center 
@@ -57,53 +59,51 @@ extern "C"
 				for (int j = 0; j < width; j++)
 				{
 					mirrorImage[k][i + offsetHeight][j + offsetWidth] = inputImage[k][i][j];
-					//cout << "mirrorImage value of " << mirrorImage[k][i][j] << " at index: " <<"[" << k << "] [" << i << "] [" << j << "]" << endl; // printing out each pixel intensities
 				}
 			}
 		}
 
 		// copy columns work! =]
-		for (int k = 0; k < samples; k++)
+		for (int k = 0; k < samples; k++) // 0~3 Samples per pixel of mirrorImge
 		{
-			for (int i = 0; i < offsetHeight; i++) // 0~2
+			for (int col = offsetHeight; col < offsetHeight + height; col++) // 3~514 Height of mirrorImage
 			{
-				for (int row = offsetWidth; row < offsetWidth + height; row++) // 3~514
+				for (int i = 0; i < offsetWidth; i++) // 0~2 Width of mirrorImage
 				{
-
 					// copy left columns
-					mirrorImage[k][row][i] = inputImage[k][row - offsetHeight][offsetWidth - i];
+					mirrorImage[k][col][i] = inputImage[k][col - offsetHeight][offsetWidth - i];
 					// copy right columns
-					mirrorImage[k][row][i + width + offsetWidth] = inputImage[k][row - offsetHeight][width - i - 2];
+					mirrorImage[k][col][i + width + offsetWidth] = inputImage[k][col - offsetHeight][width - i - 2];
 				}
 			} // end for
 		} // end for
 
-		for (int k = 0; k < samples; k++)
+		for (int k = 0; k < samples; k++) // 0~3 Samples per pixel of mirrorImge
 		{
-			for (int i = 0; i < offsetHeight; i++)
+			for (int i = 0; i < offsetHeight; i++) // 0~2 Height of mirrorImage
 			{
-				for (int col = 0; col < width + (offsetWidth * 2); col++)
+				for (int row = 0; row < width + (offsetWidth * 2); row++) // 0~514 Width if mirrorImage
 				{
             
 					// copy top rows
-					mirrorImage[k][i][col] = mirrorImage[k][(offsetHeight * 2) - i][col];
+					mirrorImage[k][i][row] = mirrorImage[k][(offsetHeight * 2) - i][row];
 					// copy bottom rows
-					mirrorImage[k][i + height + offsetHeight][col] = mirrorImage[k][height + offsetHeight - 2 - i][col];
+					mirrorImage[k][i + height + offsetHeight][row] = mirrorImage[k][height + offsetHeight - 2 - i][row];
 				}
 			}
 		}
 		
 		// Initializing the 1 dimentional array buffer
-		unsigned char* mirrorImageBuffer = new unsigned char[samples * width * height];
+		unsigned char* mirrorImageBuffer = new unsigned char[samples * MirroredWidth * MirroredHeight];
 
 		// converting the 3 dimentional array to a 1 dimentional buffer for C#
 		for (int k = 0; k < samples; k++) // the samples per pixel
 		{
-			for (int i = 0; i < height; i++) // the height (or column) of an image
+			for (int i = 0; i < MirroredHeight; i++) // the height (or column) of an image
 			{
-				for (int j = 0; j < width; j++) // the width (or row) of an image
+				for (int j = 0; j < MirroredWidth; j++) // the width (or row) of an image
 				{            
-					mirrorImageBuffer[((width * samples) * i) + (samples * j) + k] = mirrorImage[k][i][j]; // assigining all values
+					mirrorImageBuffer[((MirroredWidth * samples) * i) + (samples * j) + k] = mirrorImage[k][i][j]; // assigining all values
 				}
 			}
 		}

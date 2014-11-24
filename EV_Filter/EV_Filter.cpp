@@ -15,9 +15,9 @@ extern "C"
 	__declspec(dllexport) unsigned char* getImage(unsigned char* mirrorImageBuffer, int height, int width, int samples, int kernelHeight, int kernelWidth, int EV)
 	{
 		int offsetHeight = (kernelHeight - 3) / 2 + 1; // calculation of the center 
-		int offsetWidth = (kernelHeight - 3) / 2 + 1; // calculation of the center  
+		int offsetWidth = (kernelWidth - 3) / 2 + 1; // calculation of the center  
 
-		// Mirrorimage before the creation of the kernel
+		// Mirrorimage before the creation of the kernelTh
 		int MirroredHeight = height + (offsetHeight * 2);
 		int MirroredWidth = width + (offsetWidth * 2);
 
@@ -27,13 +27,13 @@ extern "C"
 		// Converting the 1 dimentional array to a 3 dimentional array for C++
 		for (int k = 0; k < samples; k++)
 		{
-			mirrorImage[k] = new unsigned char*[height];
-			for (int i = 0; i < height; i++)
+			mirrorImage[k] = new unsigned char*[MirroredHeight];
+			for (int i = 0; i < MirroredHeight; i++)
 			{
-				mirrorImage[k][i] = new unsigned char[width];
-				for (int j = 0; j < width; j++)
+				mirrorImage[k][i] = new unsigned char[MirroredWidth];
+				for (int j = 0; j < MirroredWidth; j++)
 				{            
-					mirrorImage[k][i][j] = mirrorImageBuffer[((width * samples) * i) + (samples * j) + k];
+					mirrorImage[k][i][j] = mirrorImageBuffer[((MirroredWidth * samples) * i) + (samples * j) + k];
 				}
 			}
 		}
@@ -79,7 +79,7 @@ extern "C"
 					double addedsum = 0;
 					double selected = 0;
 
-					unsigned char mean; // initializing the mean variable
+					int mean; // initializing the mean variable
 
 					// the current pixel that is being processed. Also the center pixel of the kernel to be created.
 					unsigned char temp = mirrorImage[k][i][j]; 
@@ -128,7 +128,7 @@ extern "C"
 					}
 
 					// tranfering the mean values to the resulting image
-					processedImage[k][i - offsetHeight][j - offsetWidth] = int(mean);                      
+					processedImage[k][i - offsetHeight][j - offsetWidth] = unsigned char(mean);                      
 				}   
 			}
 		} // end of EV filtering   

@@ -24,8 +24,13 @@ namespace Filter_GUI
             InitializeComponent();
 
             ImageBox.Source = previewimage;
-            this.Width = ImageBox.Source.Width;
-            this.Height = ImageBox.Source.Height;
+
+            var titleHeight = SystemParameters.WindowCaptionHeight + SystemParameters.ResizeFrameHorizontalBorderHeight;
+            var verticalBorderWidth = SystemParameters.ResizeFrameVerticalBorderWidth;
+
+            this.Height = titleHeight + verticalBorderWidth + ImageBox.Source.Height;
+            this.Width =  verticalBorderWidth + verticalBorderWidth+ ImageBox.Source.Width;
+            
         }
     }
 }
