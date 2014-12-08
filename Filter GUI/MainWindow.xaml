@@ -8,14 +8,14 @@
         </Grid.ColumnDefinitions>
         <GroupBox Header="Load Image" Height="80" Margin="10,10,10,0" VerticalAlignment="Top">
             <Grid>
-                <Label Content="Tiff Image:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                <Label Content="Tiff Image:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" ToolTip="The color or grayscale Tiff image to be processed.&#xA;Drag and drop function is supported."/>
                 <TextBox x:Name="textBox" Height="23" Margin="81,10,124,0" VerticalAlignment="Top" PreviewDragEnter="TextBox_PreviewDragEnter" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop"/>
-                <Button x:Name="loadImageButton" Content="Load Image. . ." HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Padding="10,2" Click="loadImageButton_Click" HorizontalContentAlignment="Left" VerticalContentAlignment="Top"/>
+                <Button x:Name="loadImageButton" Content="Load Image. . ." HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Padding="10,2" Click="loadImageButton_Click" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" ToolTip="Load the TIFF image."/>
             </Grid>
         </GroupBox>
-        <RadioButton x:Name="EV_RadioButton" Content="Rank-Order EV Filter" HorizontalAlignment="Left" Margin="139,106,0,0" VerticalAlignment="Top" IsChecked="True" Click="EV_RadioButton_Click"/>
-        <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top" Checked="ER_RadioButton_Checked"/>
-        <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top" Checked="KNV_RadioButton_Checked"/>
+        <RadioButton x:Name="EV_RadioButton" Content="Rank-Order EV Filter" HorizontalAlignment="Left" Margin="139,106,0,0" VerticalAlignment="Top" IsChecked="True" Click="EV_RadioButton_Click" ToolTip="An EV interval contains those intensity values whose difference&#xA;from the intensity value in the pixel of interest does not exceed 𝜀𝑣."/>
+        <RadioButton x:Name="ER_RadioButton" Content="Rank-Order ER Filter" HorizontalAlignment="Left" Margin="300,106,0,0" VerticalAlignment="Top" Checked="ER_RadioButton_Checked" ToolTip="An ER interval contains those intensity values whose ranks differ from&#xA;the rank of the intensity value in the pixel of interest by not more than 𝜀𝑟."/>
+        <RadioButton x:Name="KNV_RadioButton" Content="Rank-Order KNV Filter" HorizontalAlignment="Left" Margin="463,106,0,0" VerticalAlignment="Top" Checked="KNV_RadioButton_Checked" ToolTip="A KNV interval contains 𝑘 closest pixels from to the 𝑥𝑦th pixel,&#xA;in terms of the intensity values closest to the intensity of the image inputed."/>
         <GroupBox x:Name="filterHeader" Header="EV Filter Properties" Height="152" Margin="10,133,10,0" VerticalAlignment="Top">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -25,22 +25,25 @@
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="Window Size:" Margin="8,10,7,0" VerticalAlignment="Top" Height="100" Grid.Column="1">
                     <Grid>
-                        <Label Content="Vertical:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
-                        <Label Content="Horizontal:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0"/>
+                        <Label Content="Vertical:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" ToolTip="The hight of a kernel window to surround a pixel of interest."/>
+                        <Label Content="Horizontal:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0" ToolTip="The width of a kernel window to surround a pixel of interest."/>
                         <TextBox x:Name="textBox1" Height="23" Margin="98,10,22,0" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
                         <TextBox x:Name="textBox2" Height="23" Margin="98,44,22,0" VerticalAlignment="Top"/>
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="Transformation Method" Margin="10,10,6,0" VerticalAlignment="Top" Height="100">
                     <Grid>
-                        <ComboBox x:Name="transComboBox" Margin="19,27,19,0" VerticalAlignment="Top" MinWidth="110">
+                        <ComboBox x:Name="transComboBox" Margin="19,27,19,0" VerticalAlignment="Top" MinWidth="110" ToolTip="Method to be used after each Rank-Order criterion is reached.">
                             <ComboBoxItem Content="Mean"/>
+                            <ComboBoxItem Content="Median"/>
+                            <ComboBoxItem Content="Cut off"/>
+                            <ComboBoxItem Content="Multivalued"/>
                         </ComboBox>
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="Correction" Margin="7,10,10,0" VerticalAlignment="Top" Height="100" Grid.Column="2">
                     <Grid>
-                        <Label x:Name="filterLabel" Content="EV Parameter:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
+                        <Label x:Name="filterLabel" Content="EV Parameter:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" ToolTip="The criterion to be used for a given Rank-Order method."/>
                         <Label Content="Impulse Correction:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,41,0,0" IsEnabled="False"/>
                         <TextBox x:Name="textBox3" Height="23" Margin="136,10,22,0" VerticalAlignment="Top" SpellCheck.IsEnabled="True"/>
                         <TextBox x:Name="textbox4" Height="23" Margin="136,41,22,0" TextWrapping="Wrap" VerticalAlignment="Top" IsEnabled="False"/>
@@ -48,8 +51,8 @@
                 </GroupBox>
             </Grid>
         </GroupBox>
-        <Button x:Name="previewButton" Content="Preview. . ." HorizontalAlignment="Right" Margin="0,298,113,0" VerticalAlignment="Top" Padding="10,2" Click="previewButton_Click"/>
-        <Button x:Name="processImageButton" Content="Process Image" HorizontalAlignment="Right" Margin="0,298,10,0" VerticalAlignment="Top" Padding="10,2" Click="processImageButton_Click"/>
+        <Button x:Name="previewButton" Content="Preview. . ." HorizontalAlignment="Right" Margin="0,298,113,0" VerticalAlignment="Top" Padding="10,2" Click="previewButton_Click" ToolTip="See how the image would look like without saving the result to the disk."/>
+        <Button x:Name="processImageButton" Content="Process Image" HorizontalAlignment="Right" Margin="0,298,10,0" VerticalAlignment="Top" Padding="10,2" Click="processImageButton_Click" ToolTip="Process the given image from parameters entered than saved to the disk."/>
     </Grid>
 </Window>
 

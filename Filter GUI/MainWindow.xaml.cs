@@ -97,7 +97,7 @@ namespace Filter_GUI
             }
         }
 
-        private void previewButton_Click(object sender, RoutedEventArgs e)
+        private async void previewButton_Click(object sender, RoutedEventArgs e)
         {
             #region Initialization
             if (string.IsNullOrEmpty(textBox.Text))
@@ -226,6 +226,10 @@ namespace Filter_GUI
 
             #region Processing
 
+            Title = "Rank-Order Filters (Working)";
+            previewButton.IsEnabled = false;
+            processImageButton.IsEnabled = false;
+
             int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
             int offsetHeight = (kernelHeight - 3) / 2 + 1; // calculation of the center 
@@ -242,13 +246,13 @@ namespace Filter_GUI
             byte[] processedImageBuffer = new byte[samples * width * height];
 
             // Calling the native mirrorImage C++ function via a P/Invoke in C#
-            IntPtr unmanagedMirrorBuffer = mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth);
+            IntPtr unmanagedMirrorBuffer = await Task.Run(() => mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth));
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedMirrorBuffer, mirrorImageBuffer, 0, samples * MirroredWidth * MirroredHeight);
 
             // Calling the native EV_Filter C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(mirrorImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
+            IntPtr unmanagedArray = await Task.Run(() => getImage(mirrorImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter));
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
@@ -273,10 +277,14 @@ namespace Filter_GUI
             var bitmap = BitmapImage.Create(width, height, 96, 96, pixelFormat, null, processedImageBuffer, samples * width);
 
             var Preview = new Preview(bitmap);
-            Preview.Show();            
+            Preview.Show();
+
+            Title = "Rank-Order Filters";
+            previewButton.IsEnabled = true;
+            processImageButton.IsEnabled = true;
         }
 
-        private void processImageButton_Click(object sender, RoutedEventArgs e)
+        private async void processImageButton_Click(object sender, RoutedEventArgs e)
         {
             #region Initiallization
             if (string.IsNullOrEmpty(textBox.Text))
@@ -421,6 +429,10 @@ namespace Filter_GUI
 
             #region Processing
 
+            Title = "Rank-Order Filters (Working)";
+            previewButton.IsEnabled = false;
+            processImageButton.IsEnabled = false;
+
             int Filter_Parameter = Convert.ToInt32(textBox3.Text);
 
             int offsetHeight = (kernelHeight - 3) / 2 + 1; // calculation of the center 
@@ -437,20 +449,20 @@ namespace Filter_GUI
             byte[] processedImageBuffer = new byte[samples * width * height];
 
             // Calling the native mirrorImage C++ function via a P/Invoke in C#
-            IntPtr unmanagedMirrorBuffer = mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth);
+            IntPtr unmanagedMirrorBuffer = await Task.Run(() => mirrorImage(inputImageBuffer, height, width, samples, kernelHeight, kernelWidth));
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedMirrorBuffer, mirrorImageBuffer, 0, samples * MirroredWidth * MirroredHeight);
 
             // Calling the native EV_Filter C++ function via a P/Invoke in C#
-            IntPtr unmanagedArray = getImage(mirrorImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter);
+            IntPtr unmanagedArray = await Task.Run(() => getImage(mirrorImageBuffer, height, width, samples, kernelHeight, kernelWidth, Filter_Parameter));
 
             // Marshaling the resulting interger pointer unmanaged array into a managed 1 dimentional array.
             Marshal.Copy(unmanagedArray, processedImageBuffer, 0, samples * width * height);
             #endregion
 
             #region Save image
-            string fileName = "processed.tif";
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(textBox.Text) + "_Processed" + ".tif";
 
             // Create OpenFileDialog 
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
@@ -511,9 +523,13 @@ namespace Filter_GUI
                     output.WriteDirectory();
                     output.Dispose();
 
-                    System.Diagnostics.Process.Start(dlg.FileName); // displays the result
+                    //System.Diagnostics.Process.Start(dlg.FileName); // displays the result
                 }// end inner using
             }
+
+            Title = "Rank-Order Filters";
+            previewButton.IsEnabled = true;
+            processImageButton.IsEnabled = true;
             #endregion
         }
 
@@ -529,6 +545,9 @@ namespace Filter_GUI
             filterLabel.Content = "EV Parameter:";
             transComboBox.Items.Clear();
             transComboBox.Items.Add("Mean");
+            transComboBox.Items.Add("Median");
+            transComboBox.Items.Add("Cut off");
+            transComboBox.Items.Add("Multivalued");
             previewButton.IsEnabled = true;
             processImageButton.IsEnabled = true;
 
@@ -557,8 +576,8 @@ namespace Filter_GUI
             filterHeader.Header = "ER Filter Properties";
             filterLabel.Content = "ER Parameter:";
             transComboBox.Items.Clear();
-            previewButton.IsEnabled = false;
-            processImageButton.IsEnabled = false;
+            //previewButton.IsEnabled = false;
+            //processImageButton.IsEnabled = false;
 
         }
 
@@ -568,8 +587,8 @@ namespace Filter_GUI
             filterLabel.Content = "KNV Parameter:";
             transComboBox.Items.Clear();
             transComboBox.Items.Add("Median");
-            previewButton.IsEnabled = false;
-            processImageButton.IsEnabled = false;
+            //previewButton.IsEnabled = false;
+            //processImageButton.IsEnabled = false;
         } 
     }
 }
