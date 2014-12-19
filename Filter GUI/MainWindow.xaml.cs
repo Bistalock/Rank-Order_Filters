@@ -266,6 +266,8 @@ namespace Filter_GUI
             {
                 pixelFormat = PixelFormats.Rgba64;
                 MessageBoxResult result = MessageBox.Show("This program does not support alpha channels.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                previewButton.IsEnabled = true;
+                processImageButton.IsEnabled = true;
                 if (result == MessageBoxResult.OK)
                 {
                     return;
@@ -468,7 +470,6 @@ namespace Filter_GUI
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
 
             // Set the dialog box variables
-            dlg.InitialDirectory = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, @"Resources");
             dlg.DefaultExt = ".tif";
             dlg.Filter = "TIFF Image (*.tif;*.tiff)|*.tif;.tiff|All files (*.*)|*.*";
             dlg.FileName = fileName;
@@ -504,6 +505,7 @@ namespace Filter_GUI
                     byte[] buffer = new byte[width * samples];
                     // obtain each line of the final byte arrays and write them to a file
 
+
                     // loop is [height,width,samples] because of how Tiff scanlines work
                     for (int i = 0; i < height; i++)
                     {
@@ -513,7 +515,6 @@ namespace Filter_GUI
                             {
                                 buffer[samples * j + k] = processedImageBuffer[((samples * width) * i) + (samples * j) + k]; // saving the resulting image to file
                             }
-
                         }
                         // write
                         if (samples == 1) output.WriteScanline(buffer, i);
